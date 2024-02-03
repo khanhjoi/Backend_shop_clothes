@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  dev-db:
+    image: postgres:latest
+    environment:  # Correct spelling here
+      POSTGRES_DB: nest
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+  # Add other services as needed
