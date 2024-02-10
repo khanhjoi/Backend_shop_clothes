@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,15 +7,160 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id Int @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-
-  email String @unique
-  password String
-
-  firstName String?
-  lastName String?
+enum Role {
+  USER
+  ADMIN
+  STAFF
+  CUSTOMER
 }
 
+enum Status {
+  IN_PROGRESS
+  IN_PENDING
+  IN_SUCCESS
+  IN_CANCELLED
+  DELIVERED
+  RETURNED
+  REFUNDED
+  // Add more status options as needed
+}
+
+model User {
+  id        Int           @id @default(autoincrement())
+  cart      ShoppingCart?
+  orders    Order[]
+  // realtion ship
+  addresses Address[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email          String
+  password       String
+  firstName      String?
+  lastName       String?
+  role           Role
+  phone          String?
+  access_token   String?
+  refresh_token  String?
+  expires_at     Int?
+  shoppingCartId Int?
+}
+
+model Address {
+  id          Int    @id @default(autoincrement())
+  accountId   Int
+  account     User   @relation(fields: [accountId], references: [id])
+  nameAddress String
+}
+
+model Receipt {
+  id           Int             @id @default(autoincrement())
+  shopId       String
+  reciptDetail ReceiptDetail[]
+  nameReceipt  String
+  createdAt    DateTime        @default(now())
+  totelPrice   Decimal
+}
+
+model ReceiptDetail {
+  id       Int     @id @default(autoincrement())
+  receptId Int
+  receipt  Receipt @relation(fields: [receptId], references: [id])
+
+  name            String
+  categorory      String
+  descriptiont    String
+  subDescriptiont String
+  quantity        Int
+  price           Decimal
+}
+
+model Shop {
+  id      Int    @id @default(autoincrement())
+  name    String
+  address String
+}
+
+model ShoppingCart {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  products  ShoppingCartProduct[]
+  createdAt DateTime              @default(now())
+}
+
+model ShoppingCartProduct {
+  shoppingCartId Int
+  productId      Int
+  quantity       Int
+  dateAdd        DateTime @default(now())
+
+  shoppingCart ShoppingCart @relation(fields: [shoppingCartId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+
+  @@id([shoppingCartId, productId])
+}
+
+model Order {
+  id          Int           @id @default(autoincrement())
+  userId      Int           @unique
+  status      Status
+  total       Decimal
+  user        User          @relation(fields: [userId], references: [id])
+  OrderDetail OrderDetail[]
+}
+
+model OrderDetail {
+  orderId   Int
+  productId Int
+  quantity  Int
+  dateAdd   DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@id([orderId, productId])
+}
+
+//  Definde order Product schema
+model Product {
+  id             Int                   @id @default(autoincrement())
+  name           String
+  mainImage      String
+  description    String
+  subDescription String
+  price          Decimal
+  quantity       Int
+  shoppingCarts  ShoppingCartProduct[]
+  OrderDetail    OrderDetail[]
+}
+
+model Size {
+  id      Int     @id @default(autoincrement())
+  name    String
+  caption String?
+}
+
+model Image {
+  id       Int     @id @default(autoincrement())
+  color    String
+  filePath String
+  caption  String?
+}
+
+model Category {
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String
+}
+
+model Discount {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  dateStart   DateTime
+  dateEnd     DateTime
+  percent     Float
+}

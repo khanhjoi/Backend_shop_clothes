@@ -3,7 +3,15 @@ version: '3.8'
 services:
   dev-db:
     image: postgres:latest
-    environment:  # Correct spelling here
+    ports:
+      - 5434:5434  # Corrected indentation and added space between ports
+    restart: on-failure
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/client/node_modules
+      - /app/server/node_modules
+    environment:
       POSTGRES_DB: nest
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
