@@ -4,9 +4,13 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true
-  }))
+  // this set up for nest know to use class ValidationPipe
+  app.useGlobalPipes(
+    new ValidationPipe({
+      // this will cut the field not extend in DTO define
+      whitelist: true,
+    }),
+  );
   await app.listen(3333);
 }
 bootstrap();

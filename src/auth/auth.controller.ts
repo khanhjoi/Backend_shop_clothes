@@ -5,7 +5,6 @@ import {
   Post,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { User } from '@prisma/client';
 import { AuthDto } from './dto';
 
 @Controller('/auth')
@@ -21,28 +20,30 @@ export class AuthController {
    *   }
    */
   constructor(private authService: AuthService) {}
+
   /**
    * example to basic using pipe -> use class
    * @param email
    * @param password
    * @returns
+   * 
+   * instead of : 
+   *   @Post('/signup')
+    signUp(
+     @Body('email') email: string,
+      @Body('password', ParseIntPipe)
+      password: string,) {
+      console.log({ email, password });
+      return this.authService.signup();
+    }
    */
   @Post('/signup')
-  signUp(@Body() dto: AuthDto) {
+  async signUp(@Body() dto: AuthDto) {
     return this.authService.signup(dto);
   }
-  // @Post('/signup')
-  // signUp(
-  //   @Body('email') email: string,
-  //   @Body('password', ParseIntPipe)
-  //   password: string,
-  // ) {
-  //   console.log({ email, password });
-  //   return this.authService.signup();
-  // }
 
-  @Post('/signin') // Fix: Add a slash before 'signin'
-  signIn() {
-    return this.authService.signin();
+  @Post('/signin') 
+  signIn(@Body() dto: AuthDto) {
+    return this.authService.signin(dto);
   }
 }
