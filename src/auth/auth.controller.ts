@@ -5,9 +5,15 @@ import {
   HttpStatus,
   ParseIntPipe,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { AuthDto } from './dto';
+import { Tokens } from './types';
+import { AuthGuard } from '@nestjs/passport';
+import { GetCurrentUserId } from './decorator/get-current-userId.decorator';
+import { GetCurrentUser } from './decorator/get-current-user.decorator';
+import { RtGuard } from './guard/rt-jwt.guard';
 
 @Controller('/auth')
 export class AuthController {
@@ -40,14 +46,33 @@ export class AuthController {
     }
    */
   @HttpCode(HttpStatus.CREATED) // this edit for code
-  @Post('/signup')
-  async signUp(@Body() dto: AuthDto) {
-    return this.authService.signup(dto);
+  @Post('/local/signup')
+  async signupLocal(
+    @Body() dto: AuthDto,
+  ): Promise<Tokens> {
+    return this.authService.signupLocal(dto);
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('/signin') 
-  signIn(@Body() dto: AuthDto) {
-    return this.authService.signin(dto);
+  @Post('/local/signin')
+  signinLocal(@Body() dto: AuthDto) {
+    return this.authService.signinLocal(dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('/logout')
+  @HttpCode(HttpStatus.OK)
+  logout(@GetCurrentUserId() userId: number) {
+    return this.authService.logout(userId);
+  }
+
+  @UseGuards(RtGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('/refresh')
+  refreshTokens(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUser('refreshToken') refreshToken: string
+  ) {
+    return this.authService.refreshTokens(userId, refreshToken);
   }
 }

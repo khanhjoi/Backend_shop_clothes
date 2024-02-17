@@ -41,7 +41,6 @@ model User {
   lastName       String?
   role           Role
   phone          String?
-  access_token   String?
   refresh_token  String?
   expires_at     Int?
   shoppingCartId Int?

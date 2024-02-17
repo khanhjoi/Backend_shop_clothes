@@ -6,10 +6,11 @@ import {
   Strategy,
 } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
+import { JwtPayload } from '@auth/types';
 
 // it like jwt security in java
 @Injectable()
-export class JwtStrategy extends PassportStrategy(
+export class AccessStrategy extends PassportStrategy(
   Strategy,
   'jwt',
 ) {
@@ -21,19 +22,24 @@ export class JwtStrategy extends PassportStrategy(
       jwtFromRequest:
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: config.get('JWT_SECRET'),
+      secretOrKey: config.get('JWT_ACCESS_SECRET'),
     });
   }
 
-  async validate(payload: {
-    sub: number;
-    email: string;
-  }) {
-    const user =
-      await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-      });
-    delete user.password;
-    return user;
+  // async validate(payload: {
+  //   sub: number;
+  //   email: string;
+  // }) {
+  //   const user =
+  //     await this.prisma.user.findUnique({
+  //       where: { id: payload.sub },
+  //     });
+  //   console.log("ok")
+  //   delete user.password;
+  //   return user;
+  // }
+  validate(payload: JwtPayload) {
+    console.log("access token", payload)
+    return payload;
   }
 }
