@@ -35,7 +35,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  email          String @unique
+  email          String  @unique
   password       String
   firstName      String?
   lastName       String?
@@ -55,7 +55,7 @@ model Address {
 
 model Receipt {
   id           Int             @id @default(autoincrement())
-  shopId       String
+  shopId       Int
   reciptDetail ReceiptDetail[]
   nameReceipt  String
   createdAt    DateTime        @default(now())
@@ -63,12 +63,13 @@ model Receipt {
 }
 
 model ReceiptDetail {
-  id       Int     @id @default(autoincrement())
-  receptId Int
-  receipt  Receipt @relation(fields: [receptId], references: [id])
-
+  id              Int      @id @default(autoincrement())
+  receptId        Int
+  receipt         Receipt  @relation(fields: [receptId], references: [id])
   name            String
-  categorory      String
+  mainImage       String
+  images          String[]
+  category      String
   descriptiont    String
   subDescriptiont String
   quantity        Int
@@ -132,8 +133,12 @@ model Product {
   subDescription String
   price          Decimal
   quantity       Int
+  categoryId     Int?
+  Category       Category?             @relation(fields: [categoryId], references: [id])
+  
   shoppingCarts  ShoppingCartProduct[]
   OrderDetail    OrderDetail[]
+  images         Image[]
 }
 
 model Size {
@@ -143,16 +148,19 @@ model Size {
 }
 
 model Image {
-  id       Int     @id @default(autoincrement())
-  color    String
-  filePath String
-  caption  String?
+  id        Int      @id @default(autoincrement())
+  color     String
+  filePath  String
+  caption   String?
+  Product   Product? @relation(fields: [productId], references: [id])
+  productId Int?
 }
 
 model Category {
-  id          Int    @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   description String
+  products    Product[]
 }
 
 model Discount {

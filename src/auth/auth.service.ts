@@ -9,14 +9,14 @@ import { JwtService } from '@nestjs/jwt';
 // import { PrismaService } from '../prisma/prisma.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { UserSerivce } from '../users/user.service';
+import { UserService } from '../users/user.service';
 import { Tokens } from './types';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
-    private user: UserSerivce,
+    private user: UserService,
     private jwt: JwtService,
     private config: ConfigService,
   ) {}
