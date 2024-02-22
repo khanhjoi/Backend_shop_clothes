@@ -56,22 +56,22 @@ model Address {
 model Receipt {
   id           Int             @id @default(autoincrement())
   shopId       Int
-  reciptDetail ReceiptDetail[]
-  nameReceipt  String
   createdAt    DateTime        @default(now())
-  totelPrice   Decimal
+  nameReceipt  String
+  totalPrice   Decimal
+  receiptDetail ReceiptDetail[]
 }
 
 model ReceiptDetail {
   id              Int      @id @default(autoincrement())
-  receptId        Int
-  receipt         Receipt  @relation(fields: [receptId], references: [id])
+  receiptId       Int      // Corrected field name
+  receipt         Receipt  @relation(fields: [receiptId], references: [id])
   name            String
   mainImage       String
-  images          String[]
-  category      String
-  descriptiont    String
-  subDescriptiont String
+  images          Json
+  category        Int
+  description    String
+  subDescription String
   quantity        Int
   price           Decimal
 }
@@ -126,7 +126,7 @@ model OrderDetail {
 
 //  Definde order Product schema
 model Product {
-  id             Int                   @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   name           String
   mainImage      String
   description    String
@@ -134,11 +134,11 @@ model Product {
   price          Decimal
   quantity       Int
   categoryId     Int?
-  Category       Category?             @relation(fields: [categoryId], references: [id])
-  
-  shoppingCarts  ShoppingCartProduct[]
-  OrderDetail    OrderDetail[]
-  images         Image[]
+  Category       Category? @relation(fields: [categoryId], references: [id])
+
+  shoppingCarts ShoppingCartProduct[]
+  OrderDetail   OrderDetail[]
+  images        Image[]
 }
 
 model Size {

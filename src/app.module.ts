@@ -6,6 +6,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { ProductsModule } from 'products/products.module';
 import { ReceiptModule } from 'receipt/receipt.module';
+import { CategoryModule } from 'category/category.module';
+import { ImageModule } from 'image/image.module';
 
 @Module({
   imports: [
@@ -13,6 +15,8 @@ import { ReceiptModule } from 'receipt/receipt.module';
     UserModule,
     ClothesModule,
     ReceiptModule,
+    CategoryModule,
+    ImageModule,
     ProductsModule,
     PrismaModule,
     ConfigModule.forRoot({ isGlobal: true }),

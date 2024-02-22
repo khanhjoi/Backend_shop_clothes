@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
 import { ReceiptService } from './receipt.service';
+import { ReceiptDto } from './dto/receipt.dto';
 
 @Controller('receipt')
 export class ReceiptController {
@@ -19,7 +20,7 @@ export class ReceiptController {
 
   @Post('')
   @HttpCode(HttpStatus.OK)
-  async createReceipt(@Body() receiptDto: any) {
+  async createReceipt(@Body() receiptDto: ReceiptDto) {
     return this.receiptSV.createReceipt(receiptDto);
   }
 }

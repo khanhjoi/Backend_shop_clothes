@@ -15,7 +15,6 @@ CREATE TABLE "User" (
     "lastName" TEXT,
     "role" "Role" NOT NULL,
     "phone" TEXT,
-    "access_token" TEXT,
     "refresh_token" TEXT,
     "expires_at" INTEGER,
     "shoppingCartId" INTEGER,
@@ -35,10 +34,10 @@ CREATE TABLE "Address" (
 -- CreateTable
 CREATE TABLE "Receipt" (
     "id" SERIAL NOT NULL,
-    "shopId" TEXT NOT NULL,
-    "nameReceipt" TEXT NOT NULL,
+    "shopId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "totelPrice" DECIMAL(65,30) NOT NULL,
+    "nameReceipt" TEXT NOT NULL,
+    "totalPrice" DECIMAL(65,30) NOT NULL,
 
     CONSTRAINT "Receipt_pkey" PRIMARY KEY ("id")
 );
@@ -46,11 +45,13 @@ CREATE TABLE "Receipt" (
 -- CreateTable
 CREATE TABLE "ReceiptDetail" (
     "id" SERIAL NOT NULL,
-    "receptId" INTEGER NOT NULL,
+    "receiptId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
-    "categorory" TEXT NOT NULL,
-    "descriptiont" TEXT NOT NULL,
-    "subDescriptiont" TEXT NOT NULL,
+    "mainImage" TEXT NOT NULL,
+    "images" TEXT[],
+    "category" INTEGER NOT NULL,
+    "description" TEXT NOT NULL,
+    "subDescription" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
     "price" DECIMAL(65,30) NOT NULL,
 
@@ -114,6 +115,7 @@ CREATE TABLE "Product" (
     "subDescription" TEXT NOT NULL,
     "price" DECIMAL(65,30) NOT NULL,
     "quantity" INTEGER NOT NULL,
+    "categoryId" INTEGER,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
 );
@@ -133,6 +135,7 @@ CREATE TABLE "Image" (
     "color" TEXT NOT NULL,
     "filePath" TEXT NOT NULL,
     "caption" TEXT,
+    "productId" INTEGER,
 
     CONSTRAINT "Image_pkey" PRIMARY KEY ("id")
 );
@@ -171,7 +174,7 @@ CREATE UNIQUE INDEX "Order_userId_key" ON "Order"("userId");
 ALTER TABLE "Address" ADD CONSTRAINT "Address_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ReceiptDetail" ADD CONSTRAINT "ReceiptDetail_receptId_fkey" FOREIGN KEY ("receptId") REFERENCES "Receipt"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ReceiptDetail" ADD CONSTRAINT "ReceiptDetail_receiptId_fkey" FOREIGN KEY ("receiptId") REFERENCES "Receipt"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ShoppingCart" ADD CONSTRAINT "ShoppingCart_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -190,3 +193,9 @@ ALTER TABLE "OrderDetail" ADD CONSTRAINT "OrderDetail_orderId_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "OrderDetail" ADD CONSTRAINT "OrderDetail_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Image" ADD CONSTRAINT "Image_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
