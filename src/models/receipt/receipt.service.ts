@@ -9,11 +9,11 @@ import {
   ReceiptDto,
 } from './dto/receipt.dto';
 import { PrismaService } from '@prisma/prisma.service';
-import { ProductService } from 'products/products.service';
+import { ProductService } from 'models/products/products.service';
 import { Prisma, Product } from '@prisma/client';
-import { CategoryService } from 'category/category.service';
-import { ProductDto } from 'products/dto/productDto';
-import { ImageService } from 'image/image.service';
+import { CategoryService } from 'models/category/category.service';
+import { ProductDto } from 'models/products/dto/productDto';
+import { ImageService } from 'models/image/image.service';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 
 @Injectable()
@@ -46,16 +46,21 @@ export class ReceiptService {
       // create a new receipt
       await this.createReceiptHelp(receiptDto);
 
-      return "success";
+      return 'success';
     } catch (error) {
-      throw new HttpException("Error creating", error);
+      throw new HttpException(
+        'Error creating',
+        error,
+      );
     }
   }
 
   async createReceiptHelp(
     receiptDto: ReceiptDto,
   ) {
-     const totalPrice = this.calculatePriceReceipt(receiptDto.receiptDetail);
+    const totalPrice = this.calculatePriceReceipt(
+      receiptDto.receiptDetail,
+    );
 
     const receiptData: Prisma.ReceiptCreateInput =
       {
@@ -88,11 +93,11 @@ export class ReceiptService {
     });
   }
   /**
-   * check product 
+   * check product
    * not exit -> create new product
    * exit -> update quantity
-   * @param detailProduct 
-   * @returns 
+   * @param detailProduct
+   * @returns
    */
   async createProduct(
     detailProduct: ReceiptDetail,
@@ -179,15 +184,20 @@ export class ReceiptService {
     product.quantity += quantity;
 
     // Save the updated product
-    return await this.product.saveProduct(product);
+    return await this.product.saveProduct(
+      product,
+    );
   }
 
-
-  calculatePriceReceipt(listProduct: ReceiptDetail[]) {
+  calculatePriceReceipt(
+    listProduct: ReceiptDetail[],
+  ) {
     let totalPrice = 0;
-    listProduct.forEach((product:ReceiptDetail) => {
-      totalPrice += product.price
-    })
+    listProduct.forEach(
+      (product: ReceiptDetail) => {
+        totalPrice += product.price;
+      },
+    );
     return totalPrice;
   }
 }
