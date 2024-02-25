@@ -9,7 +9,7 @@ import {
   ReceiptDto,
 } from './dto/receipt.dto';
 import { PrismaService } from '@prisma/prisma.service';
-import { ProductService } from 'models/products/products.service';
+import { ProductService } from 'models/products/products.service'; 
 import { Prisma, Product } from '@prisma/client';
 import { CategoryService } from 'models/category/category.service';
 import { ProductDto } from 'models/products/dto/productDto';
@@ -102,10 +102,17 @@ export class ReceiptService {
   async createProduct(
     detailProduct: ReceiptDetail,
   ) {
-    let product =
-      await this.product.findProductByName(
-        detailProduct.name,
-      );
+    // let product =
+    //   await this.product.findProductByName(
+    //     detailProduct.name,
+    //   );
+      let product =
+      await this.prisma.product.findFirst({
+        where: {
+          name: detailProduct.name,
+          categoryId: detailProduct.category
+        }
+      });
 
     if (!product) {
       return this.createProductIfNotExists(
