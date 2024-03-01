@@ -18,4 +18,6 @@ export class UserController {
   getProfile(@GetUser() user : User){
     return user;
   }
+
+  
 }

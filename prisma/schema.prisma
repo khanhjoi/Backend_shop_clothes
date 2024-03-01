@@ -31,6 +31,7 @@ model User {
   orders    Order[]
   // realtion ship
   addresses Address[]
+  rating    Rating[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -39,7 +40,7 @@ model User {
   password       String
   firstName      String?
   lastName       String?
-  role           Role
+  role           Role    @default(USER)
   phone          String?
   refresh_token  String?
   expires_at     Int?
@@ -54,26 +55,26 @@ model Address {
 }
 
 model Receipt {
-  id           Int             @id @default(autoincrement())
-  shopId       Int
-  createdAt    DateTime        @default(now())
-  nameReceipt  String
-  totalPrice   Decimal
+  id            Int             @id @default(autoincrement())
+  shopId        Int
+  createdAt     DateTime        @default(now())
+  nameReceipt   String
+  totalPrice    Decimal
   receiptDetail ReceiptDetail[]
 }
 
 model ReceiptDetail {
-  id              Int      @id @default(autoincrement())
-  receiptId       Int      // Corrected field name
-  receipt         Receipt  @relation(fields: [receiptId], references: [id])
-  name            String
-  mainImage       String
-  images          Json
-  category        Int
+  id             Int     @id @default(autoincrement())
+  receiptId      Int // Corrected field name
+  receipt        Receipt @relation(fields: [receiptId], references: [id])
+  name           String
+  mainImage      String
+  images         Json
+  category       Int
   description    String
   subDescription String
-  quantity        Int
-  price           Decimal
+  quantity       Int
+  price          Decimal
 }
 
 model Shop {
@@ -136,9 +137,20 @@ model Product {
   categoryId     Int?
   Category       Category? @relation(fields: [categoryId], references: [id])
 
+  rating        Rating[]
   shoppingCarts ShoppingCartProduct[]
   OrderDetail   OrderDetail[]
   images        Image[]
+}
+
+model Rating {
+  Id        Int      @id @default(autoincrement())
+  rating      Int
+  comment   String
+  Product   Product? @relation(fields: [productId], references: [id])
+  productId Int?
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
 }
 
 model Size {

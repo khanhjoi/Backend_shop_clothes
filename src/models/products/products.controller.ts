@@ -1,14 +1,20 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductService } from './products.service';
-import { Prisma, Product } from '@prisma/client';
+import { Prisma, Product, Rating, User } from '@prisma/client';
 import { PaginatedResult } from 'common/decorators/Pagination';
+import { JwtGuard } from '@auth/guard';
+import { GetUser } from '@auth/decorator';
+import { CommentDto } from './dto/CommentDto';
 
 @Controller('/products')
 export class ProductController {
@@ -24,14 +30,30 @@ export class ProductController {
     orderBy: string,
     // UserOrderByWithRelationInput
     @Query('page') page: number,
-  ): Promise<PaginatedResult<Product>> {  
-    return this.productSV.getProducts({ where, orderBy, page });
+  ): Promise<PaginatedResult<Product>> {
+    return this.productSV.getProducts({
+      where,
+      orderBy,
+      page,
+    });
   }
 
   @Get('/:id')
   async getProduct(
-    @Param('id') id: number,
-  ): Promise<string> {
-    return this.productSV.getProduct(id);
+    @Param('id') id: string,
+  ): Promise<Product> {
+    return this.productSV.getProduct(
+      parseInt(id),
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('/:id')
+  async CommentProduct(
+    @Param('id') id: string,
+    @GetUser() user: any,
+    @Body() comment: CommentDto
+  ): Promise<Rating> {
+    return this.productSV.commentProduct(parseInt(id), user, comment);
   }
 }

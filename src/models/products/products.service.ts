@@ -1,14 +1,23 @@
 import {
   BadGatewayException,
+  ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
-import { Prisma, Product } from '@prisma/client';
+import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
+import {
+  Prisma,
+  Product,
+  Rating,
+  User,
+} from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import {
   PaginateFunction,
   PaginatedResult,
   paginator,
 } from 'common/decorators/Pagination';
+import { CommentDto } from './dto/CommentDto';
 
 const paginate: PaginateFunction = paginator({
   perPage: 10,
@@ -27,13 +36,13 @@ export class ProductService {
     orderBy?: string;
     page?: number;
   }): Promise<PaginatedResult<Product>> {
-
-
     return paginate(
       this.prisma.product,
       {
-        where: where ? JSON.parse(where): {} ,
-        orderBy: orderBy ? JSON.parse(orderBy): {} ,
+        where: where ? JSON.parse(where) : {},
+        orderBy: orderBy
+          ? JSON.parse(orderBy)
+          : {},
       },
       {
         page,
@@ -41,8 +50,59 @@ export class ProductService {
     );
   }
 
-  async getProduct(id: number): Promise<any> {
-    return `products/${id}`;
+  async getProduct(id: number): Promise<Product> {
+    const product =
+      await this.prisma.product.findUnique({
+        where: {
+          id: id,
+        },
+        include: {
+          images: true,
+          rating: true
+        }
+      });
+
+    if (!product)
+      throw new NotFoundException(
+        'Product not found',
+      );
+
+    return product;
+  }
+
+  async commentProduct(
+    productId: number,
+    user: any,
+    comment: CommentDto
+  ): Promise<Rating> {
+    
+    const userDB = await this.prisma.user.findUnique({
+      where:{
+        id: user.sub,
+      }
+    })
+
+    if(!userDB) throw new NotFoundException('User not found');
+
+    const product = this.prisma.product.findUnique({
+      where: {
+        id: productId
+      }
+    })
+
+    if(!product) throw new NotFoundException('Product not found');
+
+    const rating = this.prisma.rating.create({
+      data: {
+        productId: productId,
+        userId: userDB.id,
+        comment: comment.comment,
+        rating: comment.rating
+      }
+    }) 
+
+      
+    return rating;
   }
 
   async findProductByName(

@@ -13,7 +13,7 @@ CREATE TABLE "User" (
     "password" TEXT NOT NULL,
     "firstName" TEXT,
     "lastName" TEXT,
-    "role" "Role" NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'USER',
     "phone" TEXT,
     "refresh_token" TEXT,
     "expires_at" INTEGER,
@@ -48,7 +48,7 @@ CREATE TABLE "ReceiptDetail" (
     "receiptId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "mainImage" TEXT NOT NULL,
-    "images" TEXT[],
+    "images" JSONB NOT NULL,
     "category" INTEGER NOT NULL,
     "description" TEXT NOT NULL,
     "subDescription" TEXT NOT NULL,
@@ -118,6 +118,17 @@ CREATE TABLE "Product" (
     "categoryId" INTEGER,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Rating" (
+    "Id" SERIAL NOT NULL,
+    "rating" INTEGER NOT NULL,
+    "comment" TEXT NOT NULL,
+    "productId" INTEGER,
+    "userId" INTEGER,
+
+    CONSTRAINT "Rating_pkey" PRIMARY KEY ("Id")
 );
 
 -- CreateTable
@@ -196,6 +207,12 @@ ALTER TABLE "OrderDetail" ADD CONSTRAINT "OrderDetail_productId_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Rating" ADD CONSTRAINT "Rating_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Rating" ADD CONSTRAINT "Rating_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Image" ADD CONSTRAINT "Image_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
