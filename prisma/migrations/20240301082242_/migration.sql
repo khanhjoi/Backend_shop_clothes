@@ -122,13 +122,13 @@ CREATE TABLE "Product" (
 
 -- CreateTable
 CREATE TABLE "Rating" (
-    "Id" SERIAL NOT NULL,
+    "id" SERIAL NOT NULL,
     "rating" INTEGER NOT NULL,
     "comment" TEXT NOT NULL,
     "productId" INTEGER,
     "userId" INTEGER,
 
-    CONSTRAINT "Rating_pkey" PRIMARY KEY ("Id")
+    CONSTRAINT "Rating_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable

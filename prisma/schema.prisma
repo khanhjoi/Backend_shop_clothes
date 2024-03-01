@@ -144,8 +144,8 @@ model Product {
 }
 
 model Rating {
-  Id        Int      @id @default(autoincrement())
-  rating      Int
+  id        Int      @id @default(autoincrement())
+  rating    Int
   comment   String
   Product   Product? @relation(fields: [productId], references: [id])
   productId Int?

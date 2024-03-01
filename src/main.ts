@@ -8,7 +8,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       // this will cut the field not extend in DTO define
-      whitelist: true,
+      // whitelist: true
     }),
   );
   await app.listen(3333);

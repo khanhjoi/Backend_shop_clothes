@@ -39,7 +39,6 @@ export class AccessStrategy extends PassportStrategy(
   //   return user;
   // }
   validate(payload: JwtPayload) {
-    console.log("access token", payload)
     return payload;
   }
 }

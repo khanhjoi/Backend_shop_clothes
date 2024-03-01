@@ -1,16 +1,23 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { ProductService } from './products.service';
-import { Prisma, Product, Rating, User } from '@prisma/client';
+import {
+  Prisma,
+  Product,
+  Rating,
+  User,
+} from '@prisma/client';
 import { PaginatedResult } from 'common/decorators/Pagination';
 import { JwtGuard } from '@auth/guard';
 import { GetUser } from '@auth/decorator';
@@ -52,8 +59,40 @@ export class ProductController {
   async CommentProduct(
     @Param('id') id: string,
     @GetUser() user: any,
-    @Body() comment: CommentDto
+    @Body() comment: CommentDto,
   ): Promise<Rating> {
-    return this.productSV.commentProduct(parseInt(id), user, comment);
+    return this.productSV.commentProduct(
+      parseInt(id),
+      user,
+      comment,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Put('/:id')
+  async UpdateComment(
+    @Param('id') id: string,
+    @GetUser() user: any,
+    @Body() comment: CommentDto,
+  ):Promise<Rating> {
+    return this.productSV.updateComment(
+      parseInt(id),
+      user,
+      comment,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Delete('/:id/:comment')
+  async deleteComment(
+    @Param('id') id: string,
+    @Param('comment') commentId: string,
+    @GetUser() user: any,
+  ):Promise<String> {
+    return this.productSV.deleteComment(
+      parseInt(id),
+      user,
+      parseInt(commentId),
+    );
   }
 }

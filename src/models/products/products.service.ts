@@ -58,8 +58,8 @@ export class ProductService {
         },
         include: {
           images: true,
-          rating: true
-        }
+          rating: true,
+        },
       });
 
     if (!product)
@@ -73,36 +73,104 @@ export class ProductService {
   async commentProduct(
     productId: number,
     user: any,
-    comment: CommentDto
+    comment: CommentDto,
   ): Promise<Rating> {
-    
-    const userDB = await this.prisma.user.findUnique({
-      where:{
-        id: user.sub,
-      }
-    })
+    const userDB =
+      await this.prisma.user.findUnique({
+        where: {
+          id: user.sub,
+        },
+      });
 
-    if(!userDB) throw new NotFoundException('User not found');
+    if (!userDB)
+      throw new NotFoundException(
+        'User not found',
+      );
 
-    const product = this.prisma.product.findUnique({
-      where: {
-        id: productId
-      }
-    })
+    const product =
+      this.prisma.product.findUnique({
+        where: {
+          id: productId,
+        },
+      });
 
-    if(!product) throw new NotFoundException('Product not found');
+    if (!product)
+      throw new NotFoundException(
+        'Product not found',
+      );
 
     const rating = this.prisma.rating.create({
       data: {
         productId: productId,
         userId: userDB.id,
         comment: comment.comment,
-        rating: comment.rating
-      }
-    }) 
+        rating: comment.rating,
+      },
+    });
 
-      
     return rating;
+  }
+
+  async updateComment(
+    id: number,
+    user: any,
+    comment: CommentDto,
+  ): Promise<Rating> {
+    console.log(comment);
+
+    const rating = await this.prisma.rating.findUnique({
+      where: {
+        id: comment.id,
+      }
+    });
+
+    if (!rating) {
+      throw new NotFoundException(
+        'The rating is not available',
+      );
+    }
+
+    const updatedRating =
+      await this.prisma.rating.update({
+        where: { id: comment.id }, // Assuming 'id' is the primary key of the rating
+        data: {
+          // Assuming 'user' and 'comment' are fields of the Rating model
+          comment: comment.comment,
+          rating: comment.rating,
+          // You can add more fields to update here
+        },
+      });
+
+    return updatedRating;
+  }
+
+  async deleteComment(id: number, user:any, commentId: number):Promise<String>{
+    
+    const commentInProduct = await this.prisma.rating.findFirst({
+      where: {
+        id: commentId,
+        productId: id,
+        userId: user.sub
+      }
+    })
+
+    if(!commentInProduct) throw new NotFoundException(`Comment is not in product`)
+    
+    const rating = await this.prisma.rating.findUnique({
+      where: {
+        id: commentId
+      }
+    })
+
+    if(!rating) throw new NotFoundException(`No rating found to delete`);
+
+    await this.prisma.rating.delete({
+      where: {
+        id: commentId
+      }
+    })
+
+    return "Delete Successfully";
   }
 
   async findProductByName(
