@@ -32,6 +32,39 @@ export class UserService {
     return user;
   }
 
+  /**
+   * get cart of user
+   * @param user
+   * @returns
+   */
+  async getCart(
+    user: UserToken,
+  ): Promise<ShoppingCart | HttpException> {
+    const cart =
+      await this.prisma.shoppingCart.findFirst({
+        where: {
+          userId: user.sub,
+        },
+        include: {
+          products: true,
+        },
+      });
+
+    if (!cart)
+      throw new HttpException(
+        'No cart found',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return cart;
+  }
+
+  /**
+   * add, update and delete product in cart
+   * @param user
+   * @param productCart
+   * @returns
+   */
   async updateProductInCart(
     user: UserToken,
     productCart: ProductCartDto,
@@ -81,6 +114,16 @@ export class UserService {
     }
   }
 
+  /**
+    function update product cart 
+   * if quantity = 0 -> delete product in cart 
+   * if cart not exit -> create new cart 
+   * if cart exit && quantity = 0 -> update product in cart
+   * @param cart cart entity 
+   * @param product product entity
+   * @param productCart  product Dto
+   * @returns 
+   */
   private async findOrCreateCartDetail(
     cart: ShoppingCart,
     product: Product,

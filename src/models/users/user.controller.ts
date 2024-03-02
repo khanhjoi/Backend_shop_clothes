@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ShoppingCartProduct, User } from '@prisma/client';
+import { ShoppingCart, ShoppingCartProduct, User } from '@prisma/client';
 import { Request } from 'express';
 import { GetUser } from '../../auth/decorator';
 import { JwtGuard } from '../../auth/guard';
@@ -39,6 +39,17 @@ export class UserController {
     return this.userService.updateProductInCart(
       user,
       productCart,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('/cart')
+  @HttpCode(HttpStatus.CREATED)
+  getCart(
+    @GetUser() user: UserToken,
+  ): Promise<ShoppingCart | HttpException>{
+    return this.userService.getCart(
+      user,
     );
   }
 }
