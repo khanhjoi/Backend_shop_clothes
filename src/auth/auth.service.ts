@@ -20,6 +20,7 @@ export class AuthService {
     private jwt: JwtService,
     private config: ConfigService,
   ) {}
+
   async signupLocal(
     dto: AuthDto,
   ): Promise<Tokens> {
@@ -38,6 +39,13 @@ export class AuthService {
             role: dto.role ? dto.role : undefined,
           },
         });
+
+      // create shopping cart 
+      const cart = await this.prisma.shoppingCart.create({
+        data: {
+          userId: newUser.id,
+        }
+      });
 
       // Generate access token
       const token = await this.signToken(
@@ -66,6 +74,7 @@ export class AuthService {
       }
     }
   }
+
   async signinLocal(dto: AuthDto) {
     // find user
     const user = await this.user.findOne(
@@ -169,7 +178,7 @@ export class AuthService {
     });
   }
 
-  // tao token
+  // create token
   async signToken(userId: number, email: string) {
     const payload = {
       sub: userId,

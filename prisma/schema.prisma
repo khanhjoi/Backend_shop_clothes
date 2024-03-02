@@ -95,7 +95,7 @@ model ShoppingCart {
 model ShoppingCartProduct {
   shoppingCartId Int
   productId      Int
-  quantity       Int
+  quantity       Int?
   dateAdd        DateTime @default(now())
 
   shoppingCart ShoppingCart @relation(fields: [shoppingCartId], references: [id])

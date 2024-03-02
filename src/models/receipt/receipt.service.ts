@@ -9,7 +9,7 @@ import {
   ReceiptDto,
 } from './dto/receipt.dto';
 import { PrismaService } from '@prisma/prisma.service';
-import { ProductService } from 'models/products/products.service'; 
+import { ProductService } from 'models/products/products.service';
 import { Prisma, Product } from '@prisma/client';
 import { CategoryService } from 'models/category/category.service';
 import { ProductDto } from 'models/products/dto/productDto';
@@ -33,64 +33,63 @@ export class ReceiptService {
     return `Receipt ${id}`;
   }
 
-  async createReceipt(
-    receiptDto: ReceiptDto,
-  ): Promise<string> {
+  async createReceipt(receiptDto: ReceiptDto): Promise<any> {
     try {
-      //create a new production
-      receiptDto.receiptDetail.map(
-        async (product) => {
-          await this.createProduct(product);
-        },
-      );
-      // create a new receipt
+      // Create products
+      await Promise.all(receiptDto.receiptDetail.map(async (product) => {
+        await this.createProduct(product);
+      }));
+  
+      // Create receipt
       await this.createReceiptHelp(receiptDto);
-
+  
       return 'success';
     } catch (error) {
-      throw new HttpException(
-        'Error creating',
-        error,
-      );
+      throw new ExceptionsHandler(error);
     }
   }
 
   async createReceiptHelp(
     receiptDto: ReceiptDto,
   ) {
-    const totalPrice = this.calculatePriceReceipt(
-      receiptDto.receiptDetail,
-    );
+    try {
+      const totalPrice =
+        this.calculatePriceReceipt(
+          receiptDto.receiptDetail,
+        );
 
-    const receiptData: Prisma.ReceiptCreateInput =
-      {
-        shopId: receiptDto.shopId,
-        totalPrice: totalPrice,
-        nameReceipt: receiptDto.nameReceipt,
-        receiptDetail: {
-          createMany: {
-            data: receiptDto.receiptDetail.map(
-              (detail: ReceiptDetail) => ({
-                name: detail.name,
-                mainImage: detail.mainImage,
-                images: JSON.stringify(
-                  detail.images,
-                ),
-                category: detail.category,
-                description: detail.description,
-                subDescription:
-                  detail.subDescription,
-                quantity: detail.quantity,
-                price: detail.price,
-              }),
-            ),
+      const receiptData: Prisma.ReceiptCreateInput =
+        {
+          shopId: receiptDto.shopId,
+          totalPrice: totalPrice,
+          nameReceipt: receiptDto.nameReceipt,
+          receiptDetail: {
+            createMany: {
+              data: receiptDto.receiptDetail.map(
+                (detail: ReceiptDetail) => ({
+                  name: detail.name,
+                  mainImage: detail.mainImage,
+                  images: JSON.stringify(
+                    detail.images,
+                  ),
+                  category: detail.category,
+                  description: detail.description,
+                  subDescription:
+                    detail.subDescription,
+                  quantity: detail.quantity,
+                  price: detail.price,
+                }),
+              ),
+            },
           },
-        },
-      };
+        };
 
-    await this.prisma.receipt.create({
-      data: receiptData,
-    });
+      await this.prisma.receipt.create({
+        data: receiptData,
+      });
+    } catch (error) {
+      throw new ExceptionsHandler(error.message);
+    }
   }
   /**
    * check product
@@ -99,30 +98,30 @@ export class ReceiptService {
    * @param detailProduct
    * @returns
    */
-  async createProduct(
-    detailProduct: ReceiptDetail,
-  ) {
-    // let product =
-    //   await this.product.findProductByName(
-    //     detailProduct.name,
-    //   );
-      let product =
-      await this.prisma.product.findFirst({
+  async createProduct(detailProduct: ReceiptDetail) {
+    try {
+      const category = await this.prisma.category.findUnique({
+        where: { id: detailProduct.category },
+      });
+  
+      if (!category) {
+        throw new NotFoundException('Cannot find category');
+      }
+  
+      let product = await this.prisma.product.findFirst({
         where: {
           name: detailProduct.name,
-          categoryId: detailProduct.category
-        }
+          categoryId: detailProduct.category,
+        },
       });
-
-    if (!product) {
-      return this.createProductIfNotExists(
-        detailProduct,
-      );
-    } else {
-      return this.updateProductIfExists(
-        product.id,
-        detailProduct.quantity,
-      );
+  
+      if (!product) {
+        await this.createProductIfNotExists(detailProduct);
+      } else {
+        await this.updateProductIfExists(product.id, detailProduct.quantity);
+      }
+    } catch (error) {
+      throw new ExceptionsHandler(error.message);
     }
   }
 
