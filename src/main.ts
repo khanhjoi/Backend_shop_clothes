@@ -11,6 +11,12 @@ async function bootstrap() {
       // whitelist: true
     }),
   );
+
+  // Enable CORS
+  app.enableCors({
+    origin: 'http://localhost:5173',
+  });
+
   await app.listen(3333);
 }
 bootstrap();

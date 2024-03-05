@@ -26,7 +26,7 @@ export class UserController {
   @UseGuards(JwtGuard)
   @Get('/profile')
   getProfile(@GetUser() user: User) {
-    return user;
+    return this.userService.findOne(user.email);;
   }
 
   @UseGuards(JwtGuard)
