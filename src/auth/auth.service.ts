@@ -107,7 +107,6 @@ export class AuthService {
       user.id,
       token.refresh_token,
     );
-
     // send bacck user
     return token;
   }
@@ -142,10 +141,12 @@ export class AuthService {
       throw new ForbiddenException(
         'Access Denied',
       );
+
     const rtMatch = await argon.verify(
       user.refresh_token,
       rt,
     );
+    
     if (!rtMatch) {
       throw new ForbiddenException(
         'Access Denied',

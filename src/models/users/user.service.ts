@@ -29,7 +29,7 @@ export class UserService {
         where: { email: email },
       },
     );
-    delete user.role
+    if(user) delete user.role
     return user;
   }
 

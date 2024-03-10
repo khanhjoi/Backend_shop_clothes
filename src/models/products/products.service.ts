@@ -20,7 +20,7 @@ import {
 import { CommentDto } from './dto/CommentDto';
 
 const paginate: PaginateFunction = paginator({
-  perPage: 10,
+  perPage: 6,
 });
 
 @Injectable()
@@ -36,10 +36,25 @@ export class ProductService {
     orderBy?: string;
     page?: number;
   }): Promise<PaginatedResult<Product>> {
+    let filter = JSON.parse(where);
+
+    let whereFilter: any = {
+      price: filter.price,
+    };
+
+    if (
+      filter.categoryId &&
+      filter.categoryId !== 'all'
+    ) {
+      whereFilter.categoryId = parseInt(
+        filter.categoryId,
+      );
+    }
+
     return paginate(
       this.prisma.product,
       {
-        where: where ? JSON.parse(where) : {},
+        where: whereFilter,
         orderBy: orderBy
           ? JSON.parse(orderBy)
           : {},
@@ -58,15 +73,21 @@ export class ProductService {
         },
         include: {
           images: true,
-          rating: true,
+          rating: {
+            include: {
+              User: {
+                select: { firstName: true, lastName: true, email: true }, // Specify desired user fields
+              },
+            },
+          },
         },
       });
 
+    
     if (!product)
       throw new NotFoundException(
         'Product not found',
       );
-
     return product;
   }
 
@@ -118,11 +139,12 @@ export class ProductService {
   ): Promise<Rating> {
     console.log(comment);
 
-    const rating = await this.prisma.rating.findUnique({
-      where: {
-        id: comment.id,
-      }
-    });
+    const rating =
+      await this.prisma.rating.findUnique({
+        where: {
+          id: comment.id,
+        },
+      });
 
     if (!rating) {
       throw new NotFoundException(
@@ -144,33 +166,44 @@ export class ProductService {
     return updatedRating;
   }
 
-  async deleteComment(id: number, user:any, commentId: number):Promise<String>{
-    
-    const commentInProduct = await this.prisma.rating.findFirst({
-      where: {
-        id: commentId,
-        productId: id,
-        userId: user.sub
-      }
-    })
+  async deleteComment(
+    id: number,
+    user: any,
+    commentId: number,
+  ): Promise<String> {
+    const commentInProduct =
+      await this.prisma.rating.findFirst({
+        where: {
+          id: commentId,
+          productId: id,
+          userId: user.sub,
+        },
+      });
 
-    if(!commentInProduct) throw new NotFoundException(`Comment is not in product`)
-    
-    const rating = await this.prisma.rating.findUnique({
-      where: {
-        id: commentId
-      }
-    })
+    if (!commentInProduct)
+      throw new NotFoundException(
+        `Comment is not in product`,
+      );
 
-    if(!rating) throw new NotFoundException(`No rating found to delete`);
+    const rating =
+      await this.prisma.rating.findUnique({
+        where: {
+          id: commentId,
+        },
+      });
+
+    if (!rating)
+      throw new NotFoundException(
+        `No rating found to delete`,
+      );
 
     await this.prisma.rating.delete({
       where: {
-        id: commentId
-      }
-    })
+        id: commentId,
+      },
+    });
 
-    return "Delete Successfully";
+    return 'Delete Successfully';
   }
 
   async findProductByName(
