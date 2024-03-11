@@ -1,3 +1,4 @@
+import { Size } from "@prisma/client";
 import { IsArray, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class ProductDto {
@@ -11,6 +12,9 @@ export class ProductDto {
   
   @IsArray()  
   images: Image[];
+
+  @IsArray()  
+  sizes: Size[];
 
   @IsNumber()
   @IsNotEmpty()

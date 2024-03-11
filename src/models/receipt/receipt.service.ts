@@ -10,7 +10,11 @@ import {
 } from './dto/receipt.dto';
 import { PrismaService } from '@prisma/prisma.service';
 import { ProductService } from 'models/products/products.service';
-import { Prisma, Product } from '@prisma/client';
+import {
+  Prisma,
+  Product,
+  Size,
+} from '@prisma/client';
 import { CategoryService } from 'models/category/category.service';
 import { ProductDto } from 'models/products/dto/productDto';
 import { ImageService } from 'models/image/image.service';
@@ -33,16 +37,22 @@ export class ReceiptService {
     return `Receipt ${id}`;
   }
 
-  async createReceipt(receiptDto: ReceiptDto): Promise<any> {
+  async createReceipt(
+    receiptDto: ReceiptDto,
+  ): Promise<any> {
     try {
       // Create products
-      await Promise.all(receiptDto.receiptDetail.map(async (product) => {
-        await this.createProduct(product);
-      }));
-  
+      await Promise.all(
+        receiptDto.receiptDetail.map(
+          async (product) => {
+            await this.createProduct(product);
+          },
+        ),
+      );
+
       // Create receipt
       await this.createReceiptHelp(receiptDto);
-  
+
       return 'success';
     } catch (error) {
       throw new ExceptionsHandler(error);
@@ -72,6 +82,9 @@ export class ReceiptService {
                   images: JSON.stringify(
                     detail.images,
                   ),
+                  sizes: JSON.stringify(
+                    detail.sizes,
+                  ),
                   category: detail.category,
                   description: detail.description,
                   subDescription:
@@ -98,27 +111,40 @@ export class ReceiptService {
    * @param detailProduct
    * @returns
    */
-  async createProduct(detailProduct: ReceiptDetail) {
+  async createProduct(
+    detailProduct: ReceiptDetail,
+  ) {
     try {
-      const category = await this.prisma.category.findUnique({
-        where: { id: detailProduct.category },
-      });
-  
+
+      const category =
+        await this.prisma.category.findUnique({
+          where: { id: detailProduct.category },
+        });
+
       if (!category) {
-        throw new NotFoundException('Cannot find category');
+         throw new NotFoundException(
+          'Cannot find category',
+        );
       }
-  
-      let product = await this.prisma.product.findFirst({
-        where: {
-          name: detailProduct.name,
-          categoryId: detailProduct.category,
-        },
-      });
-  
+
+
+      let product =
+        await this.prisma.product.findFirst({
+          where: {
+            name: detailProduct.name,
+            categoryId: detailProduct.category,
+          },
+        });
+
       if (!product) {
-        await this.createProductIfNotExists(detailProduct);
+        await this.createProductIfNotExists(
+          detailProduct,
+        );
       } else {
-        await this.updateProductIfExists(product.id, detailProduct.quantity);
+        await this.updateProductIfExists(
+          product.id,
+          detailProduct.quantity,
+        );
       }
     } catch (error) {
       throw new ExceptionsHandler(error.message);
@@ -133,6 +159,7 @@ export class ReceiptService {
     detailProduct: ProductDto,
   ) {
     try {
+      console.log("1")
       // create new product
       const product =
         await this.prisma.product.create({
@@ -149,6 +176,8 @@ export class ReceiptService {
           },
         });
       // create image for product
+      console.log("2")
+
       const image =
         await this.image.createProductImage(
           product.id,
@@ -156,6 +185,14 @@ export class ReceiptService {
         );
 
       if (!image) throw ExceptionsHandler;
+      console.log("3")
+      
+
+      await this.createSizeProduct(
+        product.id,
+        detailProduct.sizes,
+      );
+      console.log("4")
 
       return product;
     } catch (error) {
@@ -205,5 +242,28 @@ export class ReceiptService {
       },
     );
     return totalPrice;
+  }
+
+  async createSizeProduct(
+    productId: number,
+    sizes: Size[],
+  ) {
+    await Promise.all(
+      sizes.map(async (size: Size) => {
+        const sizeDB =
+          await this.prisma.size.create({
+            data: {
+              name: size.name,
+              caption: size.caption,
+              productId: productId,
+            },
+          });
+        if (!sizeDB) {
+          throw new NotFoundException(
+            'error creating size',
+          ); // Provide a more specific message
+        }
+      }),
+    );
   }
 }

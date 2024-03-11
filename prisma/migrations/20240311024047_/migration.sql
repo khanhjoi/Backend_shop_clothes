@@ -48,6 +48,7 @@ CREATE TABLE "ReceiptDetail" (
     "receiptId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "mainImage" TEXT NOT NULL,
+    "sizes" TEXT NOT NULL,
     "images" JSONB NOT NULL,
     "category" INTEGER NOT NULL,
     "description" TEXT NOT NULL,
@@ -80,7 +81,7 @@ CREATE TABLE "ShoppingCart" (
 CREATE TABLE "ShoppingCartProduct" (
     "shoppingCartId" INTEGER NOT NULL,
     "productId" INTEGER NOT NULL,
-    "quantity" INTEGER NOT NULL,
+    "quantity" INTEGER,
     "dateAdd" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ShoppingCartProduct_pkey" PRIMARY KEY ("shoppingCartId","productId")
@@ -136,6 +137,7 @@ CREATE TABLE "Size" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "caption" TEXT,
+    "productId" INTEGER,
 
     CONSTRAINT "Size_pkey" PRIMARY KEY ("id")
 );
@@ -144,6 +146,7 @@ CREATE TABLE "Size" (
 CREATE TABLE "Image" (
     "id" SERIAL NOT NULL,
     "color" TEXT NOT NULL,
+    "codeColor" TEXT NOT NULL,
     "filePath" TEXT NOT NULL,
     "caption" TEXT,
     "productId" INTEGER,
@@ -213,6 +216,9 @@ ALTER TABLE "Rating" ADD CONSTRAINT "Rating_productId_fkey" FOREIGN KEY ("produc
 
 -- AddForeignKey
 ALTER TABLE "Rating" ADD CONSTRAINT "Rating_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Size" ADD CONSTRAINT "Size_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Image" ADD CONSTRAINT "Image_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;

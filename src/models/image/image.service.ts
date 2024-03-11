@@ -16,6 +16,7 @@ export class ImageService {
           data: {
             filePath: image.filePath,
             color: image.color,
+            codeColor: image.codeColor,
             caption: image.caption,
             // Any other fields needed for an image
             Product: {

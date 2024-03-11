@@ -21,6 +21,9 @@ export class ReceiptDetail {
   @IsArray()  
   images: any[];
 
+  @IsArray()  
+  sizes: any[];
+
   @IsNumber()
   @IsNotEmpty()
   category: number;

@@ -76,14 +76,17 @@ export class ProductService {
           rating: {
             include: {
               User: {
-                select: { firstName: true, lastName: true, email: true }, // Specify desired user fields
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                }, // Specify desired user fields
               },
             },
           },
         },
       });
 
-    
     if (!product)
       throw new NotFoundException(
         'Product not found',

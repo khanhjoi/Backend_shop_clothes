@@ -69,6 +69,7 @@ model ReceiptDetail {
   receipt        Receipt @relation(fields: [receiptId], references: [id])
   name           String
   mainImage      String
+  sizes          String
   images         Json
   category       Int
   description    String
@@ -141,6 +142,7 @@ model Product {
   shoppingCarts ShoppingCartProduct[]
   OrderDetail   OrderDetail[]
   images        Image[]
+  sizes         Size[]
 }
 
 model Rating {
@@ -154,14 +156,17 @@ model Rating {
 }
 
 model Size {
-  id      Int     @id @default(autoincrement())
-  name    String
-  caption String?
+  id        Int      @id @default(autoincrement())
+  name      String
+  caption   String?
+  Product   Product? @relation(fields: [productId], references: [id])
+  productId Int?
 }
 
 model Image {
   id        Int      @id @default(autoincrement())
   color     String
+  codeColor String
   filePath  String
   caption   String?
   Product   Product? @relation(fields: [productId], references: [id])
