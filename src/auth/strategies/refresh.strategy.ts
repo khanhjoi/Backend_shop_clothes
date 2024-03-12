@@ -34,11 +34,12 @@ export class RefreshStrategy extends PassportStrategy(
   }
 
   async validate(req: Request, payload: any) {
+  
     const refreshToken = req
       ?.get('authorization')
       ?.replace('Bearer', '')
       .trim();
-
+    console.log(refreshToken)
     if (!refreshToken)
       throw new ForbiddenException(
         'Refresh token malformed',

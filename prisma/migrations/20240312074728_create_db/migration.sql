@@ -48,8 +48,8 @@ CREATE TABLE "ReceiptDetail" (
     "receiptId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "mainImage" TEXT NOT NULL,
-    "sizes" TEXT NOT NULL,
-    "images" JSONB NOT NULL,
+    "sizes" JSONB NOT NULL,
+    "colors" JSONB NOT NULL,
     "category" INTEGER NOT NULL,
     "description" TEXT NOT NULL,
     "subDescription" TEXT NOT NULL,
@@ -81,6 +81,8 @@ CREATE TABLE "ShoppingCart" (
 CREATE TABLE "ShoppingCartProduct" (
     "shoppingCartId" INTEGER NOT NULL,
     "productId" INTEGER NOT NULL,
+    "color" TEXT NOT NULL,
+    "size" TEXT NOT NULL,
     "quantity" INTEGER,
     "dateAdd" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -143,13 +145,21 @@ CREATE TABLE "Size" (
 );
 
 -- CreateTable
-CREATE TABLE "Image" (
+CREATE TABLE "Color" (
     "id" SERIAL NOT NULL,
     "color" TEXT NOT NULL,
     "codeColor" TEXT NOT NULL,
+    "productId" INTEGER,
+
+    CONSTRAINT "Color_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Image" (
+    "id" SERIAL NOT NULL,
     "filePath" TEXT NOT NULL,
     "caption" TEXT,
-    "productId" INTEGER,
+    "colorId" INTEGER NOT NULL,
 
     CONSTRAINT "Image_pkey" PRIMARY KEY ("id")
 );
@@ -221,4 +231,7 @@ ALTER TABLE "Rating" ADD CONSTRAINT "Rating_userId_fkey" FOREIGN KEY ("userId") 
 ALTER TABLE "Size" ADD CONSTRAINT "Size_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Image" ADD CONSTRAINT "Image_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Color" ADD CONSTRAINT "Color_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Image" ADD CONSTRAINT "Image_colorId_fkey" FOREIGN KEY ("colorId") REFERENCES "Color"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
-import { AuthDto } from './dto';
+import { AuthDto, AuthDtoSignIn } from './dto';
 import { Tokens } from './types';
 import { AuthGuard } from '@nestjs/passport';
 import { GetCurrentUserId } from './decorator/get-current-userId.decorator';
@@ -55,7 +55,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('/local/signin')
-  signinLocal(@Body() dto: AuthDto) {
+  signinLocal(@Body() dto: AuthDtoSignIn) {
     return this.authService.signinLocal(dto);
   }
 

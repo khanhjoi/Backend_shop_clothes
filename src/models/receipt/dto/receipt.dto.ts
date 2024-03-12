@@ -8,6 +8,7 @@ import {
   IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Color } from 'models/products/dto/productDto';
 
 export class ReceiptDetail {
   @IsString()
@@ -19,10 +20,10 @@ export class ReceiptDetail {
   mainImage: string;
   
   @IsArray()  
-  images: any[];
+  colors: any;
 
   @IsArray()  
-  sizes: any[];
+  sizes: any;
 
   @IsNumber()
   @IsNotEmpty()

@@ -15,13 +15,12 @@ export class ImageService {
         await this.prisma.image.create({
           data: {
             filePath: image.filePath,
-            color: image.color,
-            codeColor: image.codeColor,
+
             caption: image.caption,
             // Any other fields needed for an image
-            Product: {
-              connect: { id: productId },
-            }, // Connect the image to the product
+            // Product: {
+            //   connect: { id: productId },
+            // }, // Connect the image to the product
           },
         });
       });

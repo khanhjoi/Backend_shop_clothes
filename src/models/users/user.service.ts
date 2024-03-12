@@ -183,6 +183,8 @@ export class UserService {
             data: {
               shoppingCartId: cart.id,
               productId: product.id,
+              color: productCart.color,
+              size: productCart.size,
               quantity: productCart.quantity,
             },
           },

@@ -1,5 +1,10 @@
-import { Size } from "@prisma/client";
-import { IsArray, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { Size } from '@prisma/client';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 
 export class ProductDto {
   @IsString()
@@ -9,11 +14,11 @@ export class ProductDto {
   @IsString()
   @IsNotEmpty()
   mainImage: string;
-  
-  @IsArray()  
-  images: Image[];
 
-  @IsArray()  
+  @IsArray()
+  colors: [];
+
+  @IsArray()
   sizes: Size[];
 
   @IsNumber()
@@ -37,7 +42,13 @@ export class ProductDto {
   price: number;
 }
 
-export class Image{
+export class Color {
+  color: string;
+  codeColor: string;
+  images: Image[];
+}
+
+export class Image {
   @IsString()
   @IsNotEmpty()
   color: string;
@@ -49,5 +60,4 @@ export class Image{
   @IsString()
   @IsNotEmpty()
   captions: string;
-
 }

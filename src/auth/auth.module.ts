@@ -8,8 +8,16 @@ import { AccessStrategy } from './strategies/access.strategy';
 import { RefreshStrategy } from './strategies/refresh.strategy';
 
 @Module({
-  imports: [PrismaModule, UserModule, JwtModule.register({})],
+  imports: [
+    PrismaModule,
+    UserModule,
+    JwtModule.register({}),
+  ],
   controllers: [AuthController],
-  providers: [AuthService, AccessStrategy, RefreshStrategy],
+  providers: [
+    AuthService,
+    AccessStrategy,
+    RefreshStrategy,
+  ],
 })
 export class AuthModule {}

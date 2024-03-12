@@ -16,7 +16,11 @@ import {
   Size,
 } from '@prisma/client';
 import { CategoryService } from 'models/category/category.service';
-import { ProductDto } from 'models/products/dto/productDto';
+import {
+  Color,
+  Image,
+  ProductDto,
+} from 'models/products/dto/productDto';
 import { ImageService } from 'models/image/image.service';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 
@@ -79,8 +83,8 @@ export class ReceiptService {
                 (detail: ReceiptDetail) => ({
                   name: detail.name,
                   mainImage: detail.mainImage,
-                  images: JSON.stringify(
-                    detail.images,
+                  colors: JSON.stringify(
+                    detail.colors,
                   ),
                   sizes: JSON.stringify(
                     detail.sizes,
@@ -115,18 +119,16 @@ export class ReceiptService {
     detailProduct: ReceiptDetail,
   ) {
     try {
-
       const category =
         await this.prisma.category.findUnique({
           where: { id: detailProduct.category },
         });
 
       if (!category) {
-         throw new NotFoundException(
+        throw new NotFoundException(
           'Cannot find category',
         );
       }
-
 
       let product =
         await this.prisma.product.findFirst({
@@ -147,7 +149,9 @@ export class ReceiptService {
         );
       }
     } catch (error) {
-      throw new ExceptionsHandler(error.message);
+      throw new ExceptionsHandler(
+        error.response.message,
+      );
     }
   }
 
@@ -159,7 +163,6 @@ export class ReceiptService {
     detailProduct: ProductDto,
   ) {
     try {
-      console.log("1")
       // create new product
       const product =
         await this.prisma.product.create({
@@ -176,23 +179,16 @@ export class ReceiptService {
           },
         });
       // create image for product
-      console.log("2")
-
-      const image =
-        await this.image.createProductImage(
-          product.id,
-          detailProduct.images,
-        );
-
-      if (!image) throw ExceptionsHandler;
-      console.log("3")
-      
 
       await this.createSizeProduct(
         product.id,
         detailProduct.sizes,
       );
-      console.log("4")
+
+      await this.createColorProduct(
+        product.id,
+        detailProduct.colors,
+      );
 
       return product;
     } catch (error) {
@@ -244,7 +240,7 @@ export class ReceiptService {
     return totalPrice;
   }
 
-  async createSizeProduct(
+  private async createSizeProduct(
     productId: number,
     sizes: Size[],
   ) {
@@ -265,5 +261,52 @@ export class ReceiptService {
         }
       }),
     );
+  }
+
+  private async createColorProduct(
+    productId: number,
+    colors: Color[],
+  ) {
+    try {
+      Promise.all(
+        colors.map(async (col) => {
+          const color =
+            await this.prisma.color.create({
+              data: {
+                color: col.color,
+                codeColor: col.codeColor,
+                productId: productId,
+              },
+            });
+          await this.createImageColor(
+            color.id,
+            col.images,
+          );
+        }),
+      );
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+  private async createImageColor(
+    colorId: number,
+    images: Image[],
+  ) {
+    try {
+      Promise.all(
+        images.map( async (imageDB) => {
+          const image =
+            await this.prisma.image.create({
+              data: {
+                colorId: colorId,
+                filePath: imageDB.filePath,
+                caption: imageDB.captions,
+              },
+            });
+        }),
+      );
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 }

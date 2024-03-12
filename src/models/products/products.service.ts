@@ -72,7 +72,12 @@ export class ProductService {
           id: id,
         },
         include: {
-          images: true,
+          colors: {
+            include: {
+              images: true,
+            },
+          },
+          sizes: true,
           rating: {
             include: {
               User: {

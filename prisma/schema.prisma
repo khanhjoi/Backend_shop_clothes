@@ -69,8 +69,8 @@ model ReceiptDetail {
   receipt        Receipt @relation(fields: [receiptId], references: [id])
   name           String
   mainImage      String
-  sizes          String
-  images         Json
+  sizes          Json
+  colors         Json
   category       Int
   description    String
   subDescription String
@@ -96,6 +96,8 @@ model ShoppingCart {
 model ShoppingCartProduct {
   shoppingCartId Int
   productId      Int
+  color          String
+  size           String
   quantity       Int?
   dateAdd        DateTime @default(now())
 
@@ -128,27 +130,28 @@ model OrderDetail {
 
 //  Definde order Product schema
 model Product {
-  id             Int       @id @default(autoincrement())
+  id             Int                   @id @default(autoincrement())
   name           String
   mainImage      String
   description    String
   subDescription String
   price          Decimal
   quantity       Int
-  categoryId     Int?
-  Category       Category? @relation(fields: [categoryId], references: [id])
+  rating         Rating[]
+  shoppingCarts  ShoppingCartProduct[]
+  OrderDetail    OrderDetail[]
+  sizes          Size[]
+  colors         Color[]
 
-  rating        Rating[]
-  shoppingCarts ShoppingCartProduct[]
-  OrderDetail   OrderDetail[]
-  images        Image[]
-  sizes         Size[]
+  categoryId Int?
+  Category   Category? @relation(fields: [categoryId], references: [id])
 }
 
 model Rating {
-  id        Int      @id @default(autoincrement())
-  rating    Int
-  comment   String
+  id      Int    @id @default(autoincrement())
+  rating  Int
+  comment String
+
   Product   Product? @relation(fields: [productId], references: [id])
   productId Int?
   User      User?    @relation(fields: [userId], references: [id])
@@ -156,21 +159,31 @@ model Rating {
 }
 
 model Size {
-  id        Int      @id @default(autoincrement())
-  name      String
-  caption   String?
+  id      Int     @id @default(autoincrement())
+  name    String
+  caption String?
+
+  Product   Product? @relation(fields: [productId], references: [id])
+  productId Int?
+}
+
+model Color {
+  id        Int     @id @default(autoincrement())
+  color     String
+  codeColor String
+  images    Image[]
+
   Product   Product? @relation(fields: [productId], references: [id])
   productId Int?
 }
 
 model Image {
-  id        Int      @id @default(autoincrement())
-  color     String
-  codeColor String
-  filePath  String
-  caption   String?
-  Product   Product? @relation(fields: [productId], references: [id])
-  productId Int?
+  id       Int     @id @default(autoincrement())
+  filePath String
+  caption  String?
+
+  colorId Int
+  Color   Color? @relation(fields: [colorId], references: [id])
 }
 
 model Category {

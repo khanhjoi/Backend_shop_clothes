@@ -2,6 +2,7 @@ import {
   IsEAN,
   IsNotEmpty,
   IsNumber,
+  IsString,
   Max,
   Min,
 } from 'class-validator';
@@ -16,4 +17,12 @@ export class ProductCartDto {
   @Min(0)
   @Max(100)
   quantity: number;
+
+  @IsString()
+  @IsNotEmpty()
+  color: string;
+
+  @IsString()
+  @IsNotEmpty()
+  size: string;
 }
