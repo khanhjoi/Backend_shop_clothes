@@ -18,11 +18,11 @@ export class ProductCartDto {
   @Max(100)
   quantity: number;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  color: string;
+  colorId: number;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  size: string;
+  sizeId: number;
 }

@@ -20,10 +20,7 @@ export class ReceiptDetail {
   mainImage: string;
   
   @IsArray()  
-  colors: any;
-
-  @IsArray()  
-  sizes: any;
+  options: any[]
 
   @IsNumber()
   @IsNotEmpty()
@@ -36,10 +33,6 @@ export class ReceiptDetail {
   @IsString()
   @IsNotEmpty()
   subDescription: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  quantity: number;
 
   @IsNumber()
   @IsNotEmpty()

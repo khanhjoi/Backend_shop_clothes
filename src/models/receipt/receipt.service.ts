@@ -14,10 +14,11 @@ import {
   Prisma,
   Product,
   Size,
+  Color,
+  ProductOptions,
 } from '@prisma/client';
 import { CategoryService } from 'models/category/category.service';
 import {
-  Color,
   Image,
   ProductDto,
 } from 'models/products/dto/productDto';
@@ -83,17 +84,13 @@ export class ReceiptService {
                 (detail: ReceiptDetail) => ({
                   name: detail.name,
                   mainImage: detail.mainImage,
-                  colors: JSON.stringify(
-                    detail.colors,
-                  ),
-                  sizes: JSON.stringify(
-                    detail.sizes,
+                  options: JSON.stringify(
+                    detail.options,
                   ),
                   category: detail.category,
                   description: detail.description,
                   subDescription:
-                    detail.subDescription,
-                  quantity: detail.quantity,
+                  detail.subDescription,
                   price: detail.price,
                 }),
               ),
@@ -136,6 +133,9 @@ export class ReceiptService {
             name: detailProduct.name,
             categoryId: detailProduct.category,
           },
+          include: {
+            options: true,
+          },
         });
 
       if (!product) {
@@ -144,8 +144,8 @@ export class ReceiptService {
         );
       } else {
         await this.updateProductIfExists(
+          detailProduct.options,
           product.id,
-          detailProduct.quantity,
         );
       }
     } catch (error) {
@@ -174,20 +174,14 @@ export class ReceiptService {
             subDescription:
               detailProduct.subDescription,
             price: detailProduct.price,
-            quantity: detailProduct.quantity,
             categoryId: detailProduct.category,
           },
         });
-      // create image for product
+      // create options product
 
-      await this.createSizeProduct(
-        product.id,
-        detailProduct.sizes,
-      );
-
-      await this.createColorProduct(
-        product.id,
-        detailProduct.colors,
+      await this.createOptions(
+        detailProduct.options,
+        product,
       );
 
       return product;
@@ -207,25 +201,63 @@ export class ReceiptService {
    * @param detailProduct
    */
   async updateProductIfExists(
+    options: any,
     productId: number,
-    quantity: number,
   ) {
-    const product =
-      await this.product.findProductById(
-        productId,
+    try {
+      Promise.all(
+        options.map(async (optionArr: any) => {
+          const color =
+            await this.isColorExit(optionArr);
+          console.log('update exit 1');
+          const option =
+            await this.prisma.productOptions.findFirst(
+              {
+                where: {
+                  productId: productId,
+                  sizeId: optionArr.sizeId,
+                  colorId: color.id,
+                },
+              },
+            );
+          console.log('update exit 2');
+
+          if (!option)
+            throw new NotFoundException(
+              'Option not found',
+            );
+
+          const AddProductToInventory =
+            (option.quantity +=
+              optionArr.quantity);
+          console.log('update exit 3');
+
+          await this.prisma.productOptions.update(
+            {
+              where: {
+                productId_sizeId_colorId: {
+                  productId: productId,
+                  sizeId: optionArr.sizeId,
+                  colorId: color.id,
+                },
+              },
+              data: {
+                quantity: AddProductToInventory,
+              },
+            },
+          );
+          console.log('update exit 4');
+        }),
       );
 
-    if (!product)
-      throw new NotFoundException(
-        'Not found product',
-      );
-
-    product.quantity += quantity;
-
-    // Save the updated product
-    return await this.product.saveProduct(
-      product,
-    );
+      // product.quantity += quantity;
+      // // Save the updated product
+      // return await this.product.saveProduct(
+      //   product,
+      // );
+    } catch (error) {
+      throw new ExceptionsHandler(error);
+    }
   }
 
   calculatePriceReceipt(
@@ -240,67 +272,92 @@ export class ReceiptService {
     return totalPrice;
   }
 
-  private async createSizeProduct(
-    productId: number,
-    sizes: Size[],
-  ) {
-    await Promise.all(
-      sizes.map(async (size: Size) => {
-        const sizeDB =
-          await this.prisma.size.create({
-            data: {
-              name: size.name,
-              caption: size.caption,
-              productId: productId,
-            },
-          });
-        if (!sizeDB) {
-          throw new NotFoundException(
-            'error creating size',
-          ); // Provide a more specific message
-        }
-      }),
-    );
-  }
-
-  private async createColorProduct(
-    productId: number,
-    colors: Color[],
-  ) {
+  private async isColorExit(
+    option: any,
+  ): Promise<Color> {
     try {
-      Promise.all(
-        colors.map(async (col) => {
-          const color =
-            await this.prisma.color.create({
-              data: {
-                color: col.color,
-                codeColor: col.codeColor,
-                productId: productId,
-              },
-            });
-          await this.createImageColor(
-            color.id,
-            col.images,
-          );
-        }),
-      );
+      const color =
+        await this.prisma.color.findFirst({
+          where: {
+            color: option.color,
+            codeColor: option.codeColor,
+          },
+        });
+
+      if (color) {
+        return color;
+      } else {
+        const newColor = this.prisma.color.create(
+          {
+            data: {
+              color: option.color,
+              codeColor: option.codeColor,
+            },
+          },
+        );
+        return newColor;
+      }
     } catch (error) {
       throw new Error(error);
     }
   }
+
+  private async createOptions(
+    options: any[],
+    product: Product,
+  ) {
+    try {
+      Promise.all(
+        options.map(async (optionArr: any) => {
+          const color =
+            await this.isColorExit(optionArr);
+
+          if (!color)
+            throw new NotFoundException(
+              'color not found',
+            );
+
+          const option =
+            await this.prisma.productOptions.create(
+              {
+                data: {
+                  colorId: color.id,
+                  sizeId: optionArr.sizeId,
+                  productId: product.id,
+                  quantity: optionArr.quantity,
+                },
+              },
+            );
+
+          await this.createImageColor(
+            option,
+            optionArr.images,
+          );
+        }),
+      );
+    } catch (error) {
+      throw new ExceptionsHandler(error);
+    }
+  }
+
   private async createImageColor(
-    colorId: number,
+    option: ProductOptions,
     images: Image[],
   ) {
     try {
       Promise.all(
-        images.map( async (imageDB) => {
+        images.map(async (imageDB) => {
           const image =
             await this.prisma.image.create({
               data: {
-                colorId: colorId,
                 filePath: imageDB.filePath,
                 caption: imageDB.captions,
+                productOptionsColorId:
+                  option.colorId,
+                productOptionsProductId:
+                  option.productId,
+                productOptionsSizeId:
+                  option.sizeId,
               },
             });
         }),

@@ -48,8 +48,7 @@ CREATE TABLE "ReceiptDetail" (
     "receiptId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "mainImage" TEXT NOT NULL,
-    "sizes" JSONB NOT NULL,
-    "colors" JSONB NOT NULL,
+    "options" JSONB NOT NULL,
     "category" INTEGER NOT NULL,
     "description" TEXT NOT NULL,
     "subDescription" TEXT NOT NULL,
@@ -80,13 +79,13 @@ CREATE TABLE "ShoppingCart" (
 -- CreateTable
 CREATE TABLE "ShoppingCartProduct" (
     "shoppingCartId" INTEGER NOT NULL,
-    "productId" INTEGER NOT NULL,
-    "color" TEXT NOT NULL,
-    "size" TEXT NOT NULL,
-    "quantity" INTEGER,
+    "quantity" INTEGER NOT NULL,
     "dateAdd" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "productOptionsProductId" INTEGER NOT NULL,
+    "productOptionsSizeId" INTEGER NOT NULL,
+    "productOptionsColorId" INTEGER NOT NULL,
 
-    CONSTRAINT "ShoppingCartProduct_pkey" PRIMARY KEY ("shoppingCartId","productId")
+    CONSTRAINT "ShoppingCartProduct_pkey" PRIMARY KEY ("shoppingCartId","productOptionsProductId","productOptionsSizeId","productOptionsColorId")
 );
 
 -- CreateTable
@@ -102,11 +101,13 @@ CREATE TABLE "Order" (
 -- CreateTable
 CREATE TABLE "OrderDetail" (
     "orderId" INTEGER NOT NULL,
-    "productId" INTEGER NOT NULL,
     "quantity" INTEGER NOT NULL,
     "dateAdd" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "productOptionsProductId" INTEGER NOT NULL,
+    "productOptionsSizeId" INTEGER NOT NULL,
+    "productOptionsColorId" INTEGER NOT NULL,
 
-    CONSTRAINT "OrderDetail_pkey" PRIMARY KEY ("orderId","productId")
+    CONSTRAINT "OrderDetail_pkey" PRIMARY KEY ("orderId","productOptionsProductId","productOptionsSizeId","productOptionsColorId")
 );
 
 -- CreateTable
@@ -121,6 +122,16 @@ CREATE TABLE "Product" (
     "categoryId" INTEGER,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProductOptions" (
+    "productId" INTEGER NOT NULL,
+    "sizeId" INTEGER NOT NULL,
+    "colorId" INTEGER NOT NULL,
+    "quantity" INTEGER NOT NULL,
+
+    CONSTRAINT "ProductOptions_pkey" PRIMARY KEY ("productId","sizeId","colorId")
 );
 
 -- CreateTable
@@ -139,7 +150,6 @@ CREATE TABLE "Size" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "caption" TEXT,
-    "productId" INTEGER,
 
     CONSTRAINT "Size_pkey" PRIMARY KEY ("id")
 );
@@ -149,7 +159,6 @@ CREATE TABLE "Color" (
     "id" SERIAL NOT NULL,
     "color" TEXT NOT NULL,
     "codeColor" TEXT NOT NULL,
-    "productId" INTEGER,
 
     CONSTRAINT "Color_pkey" PRIMARY KEY ("id")
 );
@@ -159,7 +168,6 @@ CREATE TABLE "Image" (
     "id" SERIAL NOT NULL,
     "filePath" TEXT NOT NULL,
     "caption" TEXT,
-    "colorId" INTEGER NOT NULL,
 
     CONSTRAINT "Image_pkey" PRIMARY KEY ("id")
 );
@@ -204,34 +212,34 @@ ALTER TABLE "ReceiptDetail" ADD CONSTRAINT "ReceiptDetail_receiptId_fkey" FOREIG
 ALTER TABLE "ShoppingCart" ADD CONSTRAINT "ShoppingCart_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ShoppingCartProduct" ADD CONSTRAINT "ShoppingCartProduct_shoppingCartId_fkey" FOREIGN KEY ("shoppingCartId") REFERENCES "ShoppingCart"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ShoppingCartProduct" ADD CONSTRAINT "ShoppingCartProduct_productOptionsProductId_productOptions_fkey" FOREIGN KEY ("productOptionsProductId", "productOptionsSizeId", "productOptionsColorId") REFERENCES "ProductOptions"("productId", "sizeId", "colorId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ShoppingCartProduct" ADD CONSTRAINT "ShoppingCartProduct_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ShoppingCartProduct" ADD CONSTRAINT "ShoppingCartProduct_shoppingCartId_fkey" FOREIGN KEY ("shoppingCartId") REFERENCES "ShoppingCart"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "OrderDetail" ADD CONSTRAINT "OrderDetail_productOptionsProductId_productOptionsSizeId_p_fkey" FOREIGN KEY ("productOptionsProductId", "productOptionsSizeId", "productOptionsColorId") REFERENCES "ProductOptions"("productId", "sizeId", "colorId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "OrderDetail" ADD CONSTRAINT "OrderDetail_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OrderDetail" ADD CONSTRAINT "OrderDetail_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ProductOptions" ADD CONSTRAINT "ProductOptions_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProductOptions" ADD CONSTRAINT "ProductOptions_sizeId_fkey" FOREIGN KEY ("sizeId") REFERENCES "Size"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProductOptions" ADD CONSTRAINT "ProductOptions_colorId_fkey" FOREIGN KEY ("colorId") REFERENCES "Color"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Rating" ADD CONSTRAINT "Rating_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Rating" ADD CONSTRAINT "Rating_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Size" ADD CONSTRAINT "Size_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Color" ADD CONSTRAINT "Color_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Image" ADD CONSTRAINT "Image_colorId_fkey" FOREIGN KEY ("colorId") REFERENCES "Color"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

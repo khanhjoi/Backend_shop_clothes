@@ -16,10 +16,7 @@ export class ProductDto {
   mainImage: string;
 
   @IsArray()
-  colors: [];
-
-  @IsArray()
-  sizes: Size[];
+  options: any[];
 
   @IsNumber()
   @IsNotEmpty()
@@ -35,17 +32,12 @@ export class ProductDto {
 
   @IsNumber()
   @IsNotEmpty()
-  quantity: number;
-
-  @IsNumber()
-  @IsNotEmpty()
   price: number;
 }
 
 export class Color {
   color: string;
   codeColor: string;
-  images: Image[];
 }
 
 export class Image {

@@ -29,7 +29,7 @@ export class UserService {
         where: { email: email },
       },
     );
-    if(user) delete user.role
+    if (user) delete user.role;
     return user;
   }
 
@@ -47,7 +47,9 @@ export class UserService {
           userId: user.sub,
         },
         include: {
-          products: true,
+          products: {
+            include: {},
+          },
         },
       });
 
@@ -99,6 +101,8 @@ export class UserService {
           },
         });
 
+      console.log('cart detail');
+
       const cartDetail =
         await this.findOrCreateCartDetail(
           cart,
@@ -131,16 +135,20 @@ export class UserService {
     productCart: ProductCartDto,
   ): Promise<ShoppingCartProduct> {
     const isCartDetailExist =
-      await this.prisma.shoppingCartProduct.findUnique(
+      await this.prisma.shoppingCartProduct.findFirst(
         {
           where: {
-            shoppingCartId_productId: {
-              shoppingCartId: cart.id,
-              productId: product.id,
-            },
+            shoppingCartId: cart.id,
+            productOptionsColorId:
+              productCart.colorId,
+            productOptionsProductId:
+              productCart.productId,
+            productOptionsSizeId:
+              productCart.sizeId,
           },
         },
       );
+
 
     if (
       isCartDetailExist &&
@@ -149,10 +157,16 @@ export class UserService {
       await this.prisma.shoppingCartProduct.delete(
         {
           where: {
-            shoppingCartId_productId: {
-              shoppingCartId: cart.id,
-              productId: product.id,
-            },
+            shoppingCartId_productOptionsProductId_productOptionsSizeId_productOptionsColorId:
+              {
+                shoppingCartId: cart.id,
+                productOptionsColorId:
+                  productCart.colorId,
+                productOptionsProductId:
+                  productCart.productId,
+                productOptionsSizeId:
+                  productCart.sizeId,
+              },
           },
         },
       );
@@ -167,10 +181,16 @@ export class UserService {
         return await this.prisma.shoppingCartProduct.update(
           {
             where: {
-              shoppingCartId_productId: {
-                shoppingCartId: cart.id,
-                productId: product.id,
-              },
+              shoppingCartId_productOptionsProductId_productOptionsSizeId_productOptionsColorId:
+                {
+                  shoppingCartId: cart.id,
+                  productOptionsColorId:
+                    productCart.colorId,
+                  productOptionsProductId:
+                    productCart.productId,
+                  productOptionsSizeId:
+                    productCart.sizeId,
+                },
             },
             data: {
               quantity: productCart.quantity,
@@ -182,9 +202,12 @@ export class UserService {
           {
             data: {
               shoppingCartId: cart.id,
-              productId: product.id,
-              color: productCart.color,
-              size: productCart.size,
+              productOptionsColorId:
+                productCart.colorId,
+              productOptionsProductId:
+                productCart.productId,
+              productOptionsSizeId:
+                productCart.sizeId,
               quantity: productCart.quantity,
             },
           },

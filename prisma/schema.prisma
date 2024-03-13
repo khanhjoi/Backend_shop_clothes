@@ -69,12 +69,10 @@ model ReceiptDetail {
   receipt        Receipt @relation(fields: [receiptId], references: [id])
   name           String
   mainImage      String
-  sizes          Json
-  colors         Json
+  options        Json
   category       Int
   description    String
   subDescription String
-  quantity       Int
   price          Decimal
 }
 
@@ -95,16 +93,17 @@ model ShoppingCart {
 
 model ShoppingCartProduct {
   shoppingCartId Int
-  productId      Int
-  color          String
-  size           String
-  quantity       Int?
-  dateAdd        DateTime @default(now())
+  quantity       Int
+
+  dateAdd                 DateTime       @default(now())
+  productOptionsProductId Int
+  productOptionsSizeId    Int
+  productOptionsColorId   Int
+  productOption           ProductOptions @relation(fields: [productOptionsProductId, productOptionsSizeId, productOptionsColorId], references: [productId, sizeId, colorId])
 
   shoppingCart ShoppingCart @relation(fields: [shoppingCartId], references: [id])
-  product      Product      @relation(fields: [productId], references: [id])
 
-  @@id([shoppingCartId, productId])
+  @@id([shoppingCartId, productOptionsProductId, productOptionsSizeId, productOptionsColorId])
 }
 
 model Order {
@@ -117,34 +116,49 @@ model Order {
 }
 
 model OrderDetail {
-  orderId   Int
-  productId Int
-  quantity  Int
-  dateAdd   DateTime @default(now())
+  orderId Int
 
-  order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  quantity                Int
+  dateAdd                 DateTime       @default(now())
+  productOptionsProductId Int
+  productOptionsSizeId    Int
+  productOptionsColorId   Int
+  productOption           ProductOptions @relation(fields: [productOptionsProductId, productOptionsSizeId, productOptionsColorId], references: [productId, sizeId, colorId])
+  order                   Order          @relation(fields: [orderId], references: [id])
 
-  @@id([orderId, productId])
+  @@id([orderId, productOptionsProductId, productOptionsSizeId, productOptionsColorId])
 }
 
 //  Definde order Product schema
 model Product {
-  id             Int                   @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   name           String
   mainImage      String
   description    String
   subDescription String
   price          Decimal
-  quantity       Int
   rating         Rating[]
-  shoppingCarts  ShoppingCartProduct[]
-  OrderDetail    OrderDetail[]
-  sizes          Size[]
-  colors         Color[]
+
+  options ProductOptions[]
 
   categoryId Int?
   Category   Category? @relation(fields: [categoryId], references: [id])
+}
+
+model ProductOptions {
+  productId           Int
+  sizeId              Int
+  colorId             Int
+  quantity            Int
+  images              Image[]
+  OrderDetail         OrderDetail[]
+  ShoppingCartProduct ShoppingCartProduct[]
+
+  Product Product @relation(fields: [productId], references: [id])
+  Size    Size    @relation(fields: [sizeId], references: [id])
+  Color   Color   @relation(fields: [colorId], references: [id])
+
+  @@id([productId, sizeId, colorId])
 }
 
 model Rating {
@@ -159,31 +173,28 @@ model Rating {
 }
 
 model Size {
-  id      Int     @id @default(autoincrement())
+  id      Int              @id @default(autoincrement())
   name    String
   caption String?
-
-  Product   Product? @relation(fields: [productId], references: [id])
-  productId Int?
+  option  ProductOptions[]
 }
 
 model Color {
-  id        Int     @id @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   color     String
   codeColor String
-  images    Image[]
 
-  Product   Product? @relation(fields: [productId], references: [id])
-  productId Int?
+  option ProductOptions[]
 }
 
 model Image {
-  id       Int     @id @default(autoincrement())
-  filePath String
-  caption  String?
-
-  colorId Int
-  Color   Color? @relation(fields: [colorId], references: [id])
+  id                      Int             @id @default(autoincrement())
+  filePath                String
+  caption                 String?
+  ProductOptions          ProductOptions? @relation(fields: [productOptionsProductId, productOptionsSizeId, productOptionsColorId], references: [productId, sizeId, colorId])
+  productOptionsProductId Int?
+  productOptionsSizeId    Int?
+  productOptionsColorId   Int?
 }
 
 model Category {
