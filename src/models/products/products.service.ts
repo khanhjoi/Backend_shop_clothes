@@ -83,6 +83,13 @@ export class ProductService {
               },
             },
           },
+          options: {
+            select: {
+              Size: true,
+              images: true,
+              Color: true,
+            },
+          },
         },
       });
 
@@ -90,6 +97,7 @@ export class ProductService {
       throw new NotFoundException(
         'Product not found',
       );
+
     return product;
   }
 

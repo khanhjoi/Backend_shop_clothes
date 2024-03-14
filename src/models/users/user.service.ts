@@ -40,18 +40,46 @@ export class UserService {
    */
   async getCart(
     user: UserToken,
-  ): Promise<ShoppingCart | HttpException> {
+  ): Promise<any[] | HttpException> {
     const cart =
       await this.prisma.shoppingCart.findFirst({
         where: {
           userId: user.sub,
         },
-        include: {
-          products: {
-            include: {},
+      });
+
+    const cartDetail =
+      await this.prisma.shoppingCartProduct.findMany(
+        {
+          where: {
+            shoppingCartId: cart.id,
+          },
+          select: {
+            productOption: {
+              select: {
+                Product: {
+                  select: {
+                    name: true,
+                    mainImage: true,
+                    price: true,
+                  },
+                },
+                Color: {
+                  select: {
+                    color: true,
+                  },
+                },
+                Size: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+            quantity: true,
           },
         },
-      });
+      );
 
     if (!cart)
       throw new HttpException(
@@ -59,7 +87,7 @@ export class UserService {
         HttpStatus.NOT_FOUND,
       );
 
-    return cart;
+    return cartDetail;
   }
 
   /**
@@ -100,9 +128,6 @@ export class UserService {
             id: productCart.productId,
           },
         });
-
-      console.log('cart detail');
-
       const cartDetail =
         await this.findOrCreateCartDetail(
           cart,
@@ -148,7 +173,6 @@ export class UserService {
           },
         },
       );
-
 
     if (
       isCartDetailExist &&

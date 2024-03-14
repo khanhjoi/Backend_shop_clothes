@@ -47,7 +47,7 @@ export class UserController {
   @HttpCode(HttpStatus.CREATED)
   getCart(
     @GetUser() user: UserToken,
-  ): Promise<ShoppingCart | HttpException>{
+  ): Promise<ShoppingCartProduct[]  | HttpException>{
     return this.userService.getCart(
       user,
     );
