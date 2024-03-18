@@ -52,7 +52,6 @@ CREATE TABLE "ReceiptDetail" (
     "category" INTEGER NOT NULL,
     "description" TEXT NOT NULL,
     "subDescription" TEXT NOT NULL,
-    "quantity" INTEGER NOT NULL,
     "price" DECIMAL(65,30) NOT NULL,
 
     CONSTRAINT "ReceiptDetail_pkey" PRIMARY KEY ("id")
@@ -92,6 +91,7 @@ CREATE TABLE "ShoppingCartProduct" (
 CREATE TABLE "Order" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
+    "address" TEXT NOT NULL,
     "status" "Status" NOT NULL,
     "total" DECIMAL(65,30) NOT NULL,
 
@@ -118,7 +118,6 @@ CREATE TABLE "Product" (
     "description" TEXT NOT NULL,
     "subDescription" TEXT NOT NULL,
     "price" DECIMAL(65,30) NOT NULL,
-    "quantity" INTEGER NOT NULL,
     "categoryId" INTEGER,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
@@ -139,6 +138,7 @@ CREATE TABLE "Rating" (
     "id" SERIAL NOT NULL,
     "rating" INTEGER NOT NULL,
     "comment" TEXT NOT NULL,
+    "dateAdd" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "productId" INTEGER,
     "userId" INTEGER,
 
@@ -168,6 +168,9 @@ CREATE TABLE "Image" (
     "id" SERIAL NOT NULL,
     "filePath" TEXT NOT NULL,
     "caption" TEXT,
+    "productOptionsProductId" INTEGER,
+    "productOptionsSizeId" INTEGER,
+    "productOptionsColorId" INTEGER,
 
     CONSTRAINT "Image_pkey" PRIMARY KEY ("id")
 );
@@ -198,9 +201,6 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ShoppingCart_userId_key" ON "ShoppingCart"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Order_userId_key" ON "Order"("userId");
 
 -- AddForeignKey
 ALTER TABLE "Address" ADD CONSTRAINT "Address_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -243,3 +243,6 @@ ALTER TABLE "Rating" ADD CONSTRAINT "Rating_productId_fkey" FOREIGN KEY ("produc
 
 -- AddForeignKey
 ALTER TABLE "Rating" ADD CONSTRAINT "Rating_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Image" ADD CONSTRAINT "Image_productOptionsProductId_productOptionsSizeId_product_fkey" FOREIGN KEY ("productOptionsProductId", "productOptionsSizeId", "productOptionsColorId") REFERENCES "ProductOptions"("productId", "sizeId", "colorId") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -108,7 +108,8 @@ model ShoppingCartProduct {
 
 model Order {
   id          Int           @id @default(autoincrement())
-  userId      Int           @unique
+  userId      Int          
+  address     String
   status      Status
   total       Decimal
   user        User          @relation(fields: [userId], references: [id])

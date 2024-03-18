@@ -1,74 +1,187 @@
-import { Injectable } from "@nestjs/common";
-import { ExceptionsHandler } from "@nestjs/core/exceptions/exceptions-handler";
-import { Order } from "@prisma/client";
-import { PrismaService } from "@prisma/prisma.service";
-import { NotFoundError } from "rxjs";
+import { Injectable } from '@nestjs/common';
+import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
+import { Order } from '@prisma/client';
+import { PrismaService } from '@prisma/prisma.service';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class OrderService {
-  constructor(private prisma: PrismaService) {
-
-  }
-  async getOrder (user:any) {
+  constructor(private prisma: PrismaService) {}
+  async getOrder(user: any) {
     try {
-      
+    } catch (error) {}
+  }
+
+  async createOrder(user: any, order: any) {
+    try {
+      const createOrder =
+        await this.prisma.order.create({
+          data: {
+            userId: user.sub,
+            address: order.address,
+            status: 'IN_PROGRESS',
+            total: order.total,
+          },
+        });
+
+      if (!createOrder)
+        throw new NotFoundError(
+          'some error occurred while creating',
+        );
+
+      await this.createOrderDetail(
+        createOrder.id,
+        order.orderDetail,
+      );
+
+      await this.removeCartDetail(user.sub);
+      return createOrder;
     } catch (error) {
-      
+      console.log(error);
+      throw new ExceptionsHandler(error);
     }
   }
 
-  async createOrder (user:any, order:any) {
+  async getOrders(user: any): Promise<Order> {
     try {
-      console.log('user', user);
-      console.log("order", order);
+      const order =
+        await this.prisma.order.findFirst({
+          where: {
+            userId: user.sub,
+          },
+          include: {
+            user: {
+              select: {
+                email: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+              },
+            },
+            OrderDetail: {
+              select: {
+                productOption: {
+                  include: {
+                    Color: true,
+                    Size: true,
+                    Product: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+      if (!order)
+        throw new NotFoundError(
+          `Order not found`,
+        );
 
-      const createOrder = await this.prisma.order.create({
-        data: {
-          userId: user.sub,
-          status: "IN_PROGRESS",
-          total: order.total
-        }
-      })
-
-      if(!createOrder) throw new NotFoundError("some error occurred while creating");
-
-      await this.createOrderDetail(createOrder.id, order.orderDetail)
-
+      return order;
     } catch (error) {
       throw new ExceptionsHandler(error);
     }
   }
 
-  async getOrders() {
-    try {
-      
-    } catch (error) {
-      
-    }
-  }
-
   async getOrdersByAdmin() {
     try {
-      
-    } catch (error) {
-      
+    } catch (error) {}
+  }
+
+  async createOrderDetail(
+    orderId: number,
+    orderDetail: any,
+  ) {
+    if(orderDetail.length <= 0) throw new Error('orderDetail must have value')
+
+    for (const option of orderDetail) {
+      const orderDetailOption =
+        await this.prisma.orderDetail.create({
+          data: {
+            orderId: orderId,
+            quantity: option.quantity,
+            productOptionsProductId:
+              option.productOption.Product.id,
+            productOptionsColorId:
+              option.productOption.Color.id,
+            productOptionsSizeId:
+              option.productOption.Size.id,
+          },
+        });
+
+      const productOption =
+        await this.prisma.productOptions.findFirst(
+          {
+            where: {
+              productId:
+                option.productOption.Product.id,
+              colorId:
+                option.productOption.Color.id,
+              sizeId:
+                option.productOption.Size.id,
+            },
+          },
+        );
+
+      if (!productOption)
+        throw new NotFoundError(
+          'can find product option',
+        );
+
+      await this.prisma.productOptions.update({
+        where: {
+          productId_sizeId_colorId: {
+            productId:
+              option.productOption.Product.id,
+            colorId:
+              option.productOption.Color.id,
+            sizeId: option.productOption.Size.id,
+          },
+        },
+        data: {
+          quantity:
+            productOption.quantity -
+            option.quantity,
+        },
+      });
+
+      if (!orderDetailOption)
+        throw new NotFoundError(
+          'something wrong happened',
+        );
     }
   }
 
-  async createOrderDetail(orderId: number, orderDetail:any) {
+  async removeCartDetail(userId: number) {
+    try {
+      const shoppingCart =
+        await this.prisma.shoppingCart.findFirst({
+          where: {
+            userId: userId,
+          },
+        });
 
-    orderDetail.forEach( async(option:any) => {
-      const orderDetailOption = await this.prisma.orderDetail.create({
-        data: {
-          orderId: orderId,
-          quantity: option.quantity,
-          productOptionsProductId: option.productId,
-          productOptionsColorId: option.colorId,
-          productOptionsSizeId: option.sizeId,
-        }
-      })
+      if (!shoppingCart)
+        throw new NotFoundError(
+          `No shopping cart`,
+        );
 
-      if(!orderDetailOption) throw new NotFoundError("something wrong happened")
-    });
+      const shoppingCartDetail =
+        await this.prisma.shoppingCartProduct.deleteMany(
+          {
+            where: {
+              shoppingCartId: shoppingCart.id,
+            },
+          },
+        );
+
+      if (!shoppingCartDetail)
+        throw new NotFoundError(
+          `No shopping cart`,
+        );
+
+      return shoppingCartDetail;
+    } catch (error) {
+      throw new ExceptionsHandler(error);
+    }
   }
 }

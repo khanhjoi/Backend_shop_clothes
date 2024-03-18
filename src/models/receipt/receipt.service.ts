@@ -47,14 +47,9 @@ export class ReceiptService {
   ): Promise<any> {
     try {
       // Create products
-      await Promise.all(
-        receiptDto.receiptDetail.map(
-          async (product) => {
-            await this.createProduct(product);
-          },
-        ),
-      );
-
+      for (const product of receiptDto.receiptDetail) {
+        await this.createProduct(product);
+      }
       // Create receipt
       await this.createReceiptHelp(receiptDto);
 
@@ -90,7 +85,7 @@ export class ReceiptService {
                   category: detail.category,
                   description: detail.description,
                   subDescription:
-                  detail.subDescription,
+                    detail.subDescription,
                   price: detail.price,
                 }),
               ),
@@ -116,6 +111,7 @@ export class ReceiptService {
     detailProduct: ReceiptDetail,
   ) {
     try {
+
       const category =
         await this.prisma.category.findUnique({
           where: { id: detailProduct.category },
@@ -127,6 +123,7 @@ export class ReceiptService {
         );
       }
 
+
       let product =
         await this.prisma.product.findFirst({
           where: {
@@ -137,8 +134,9 @@ export class ReceiptService {
             options: true,
           },
         });
-
       if (!product) {
+   
+
         await this.createProductIfNotExists(
           detailProduct,
         );
@@ -163,6 +161,8 @@ export class ReceiptService {
     detailProduct: ProductDto,
   ) {
     try {
+
+
       // create new product
       const product =
         await this.prisma.product.create({
@@ -178,7 +178,7 @@ export class ReceiptService {
           },
         });
       // create options product
-
+  
       await this.createOptions(
         detailProduct.options,
         product,
@@ -187,10 +187,7 @@ export class ReceiptService {
       return product;
     } catch (error) {
       // Handle the error here, you can log it or perform any other actions.
-      console.error(
-        'Error creating product:',
-        error,
-      );
+
       // Rethrow the error to propagate it to the caller.
       throw error;
     }
@@ -205,56 +202,42 @@ export class ReceiptService {
     productId: number,
   ) {
     try {
-      Promise.all(
-        options.map(async (optionArr: any) => {
-          const color =
-            await this.isColorExit(optionArr);
-          console.log('update exit 1');
-          const option =
-            await this.prisma.productOptions.findFirst(
-              {
-                where: {
-                  productId: productId,
-                  sizeId: optionArr.sizeId,
-                  colorId: color.id,
-                },
-              },
-            );
-          console.log('update exit 2');
+      for (const optionArr of options) {
+        const color =
+          await this.isColorExist(optionArr);
 
-          if (!option)
-            throw new NotFoundException(
-              'Option not found',
-            );
-
-          const AddProductToInventory =
-            (option.quantity +=
-              optionArr.quantity);
-          console.log('update exit 3');
-
-          await this.prisma.productOptions.update(
+        const option =
+          await this.prisma.productOptions.findFirst(
             {
               where: {
-                productId_sizeId_colorId: {
-                  productId: productId,
-                  sizeId: optionArr.sizeId,
-                  colorId: color.id,
-                },
-              },
-              data: {
-                quantity: AddProductToInventory,
+                productId: productId,
+                sizeId: optionArr.sizeId,
+                colorId: color.id,
               },
             },
           );
-          console.log('update exit 4');
-        }),
-      );
 
-      // product.quantity += quantity;
-      // // Save the updated product
-      // return await this.product.saveProduct(
-      //   product,
-      // );
+        if (!option)
+          throw new NotFoundException(
+            'Option not found',
+          );
+
+        const AddProductToInventory =
+          (option.quantity += optionArr.quantity);
+
+        await this.prisma.productOptions.update({
+          where: {
+            productId_sizeId_colorId: {
+              productId: productId,
+              sizeId: optionArr.sizeId,
+              colorId: color.id,
+            },
+          },
+          data: {
+            quantity: AddProductToInventory,
+          },
+        });
+      }
     } catch (error) {
       throw new ExceptionsHandler(error);
     }
@@ -272,29 +255,28 @@ export class ReceiptService {
     return totalPrice;
   }
 
-  private async isColorExit(
+  async isColorExist(
     option: any,
   ): Promise<Color> {
     try {
-      const color =
+      const existingColor =
         await this.prisma.color.findFirst({
           where: {
             color: option.color,
-            codeColor: option.codeColor,
           },
         });
 
-      if (color) {
-        return color;
+      if (existingColor) {
+        return existingColor;
       } else {
-        const newColor = this.prisma.color.create(
-          {
+        const newColor =
+          await this.prisma.color.create({
             data: {
               color: option.color,
               codeColor: option.codeColor,
             },
-          },
-        );
+          });
+
         return newColor;
       }
     } catch (error) {
@@ -307,34 +289,36 @@ export class ReceiptService {
     product: Product,
   ) {
     try {
-      Promise.all(
-        options.map(async (optionArr: any) => {
-          const color =
-            await this.isColorExit(optionArr);
 
-          if (!color)
-            throw new NotFoundException(
-              'color not found',
-            );
 
-          const option =
-            await this.prisma.productOptions.create(
-              {
-                data: {
-                  colorId: color.id,
-                  sizeId: optionArr.sizeId,
-                  productId: product.id,
-                  quantity: optionArr.quantity,
-                },
-              },
-            );
+      for (const optionArr of options) {
+        const color =
+          await this.isColorExist(optionArr);
 
-          await this.createImageColor(
-            option,
-            optionArr.images,
+        if (!color)
+          throw new NotFoundException(
+            'color not found',
           );
-        }),
-      );
+
+        const option =
+          await this.prisma.productOptions.create(
+            {
+              data: {
+                colorId: color.id,
+                sizeId: optionArr.sizeId,
+                productId: product.id,
+                quantity: optionArr.quantity,
+              },
+            },
+          );
+  
+
+        await this.createImageColor(
+          option,
+          optionArr.images,
+        );
+      }
+
     } catch (error) {
       throw new ExceptionsHandler(error);
     }
@@ -345,23 +329,20 @@ export class ReceiptService {
     images: Image[],
   ) {
     try {
-      Promise.all(
-        images.map(async (imageDB) => {
-          const image =
-            await this.prisma.image.create({
-              data: {
-                filePath: imageDB.filePath,
-                caption: imageDB.captions,
-                productOptionsColorId:
-                  option.colorId,
-                productOptionsProductId:
-                  option.productId,
-                productOptionsSizeId:
-                  option.sizeId,
-              },
-            });
-        }),
-      );
+      images.map(async (imageDB) => {
+        const image =
+          await this.prisma.image.create({
+            data: {
+              filePath: imageDB.filePath,
+              caption: imageDB.captions,
+              productOptionsColorId:
+                option.colorId,
+              productOptionsProductId:
+                option.productId,
+              productOptionsSizeId: option.sizeId,
+            },
+          });
+      });
     } catch (error) {
       throw new Error(error);
     }

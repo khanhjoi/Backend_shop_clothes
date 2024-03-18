@@ -11,7 +11,9 @@ import { OrderService } from './ordere.service';
 
 @Controller()
 export class OrderController {
-  constructor(private orderService: OrderService) {}
+  constructor(
+    private orderService: OrderService,
+  ) {}
 
   @UseGuards(JwtGuard)
   @Get('/user/order')
@@ -25,18 +27,19 @@ export class OrderController {
   @Get('/user/orders')
   async getAllOrder(
     @GetUser() user: any,
-    @Body() order: any
   ): Promise<any> {
-    return this.orderService.createOrder(user, order);
+    return this.orderService.getOrders(user);
   }
 
   @UseGuards(JwtGuard)
   @Post('/user/order')
   async createOrder(
     @GetUser() user: any,
-    @Body() order: any
+    @Body() order: any,
   ): Promise<any> {
-    return this.orderService.createOrder(user, order);
-
+    return this.orderService.createOrder(
+      user,
+      order,
+    );
   }
 }
