@@ -11,13 +11,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ShoppingCart, ShoppingCartProduct, User } from '@prisma/client';
+import { Address, ShoppingCart, ShoppingCartProduct, User } from '@prisma/client';
 import { Request } from 'express';
 import { GetUser } from '../../auth/decorator';
 import { JwtGuard } from '../../auth/guard';
 import { UserService } from './user.service';
 import { ProductCartDto } from './dto/ProductCartDto';
 import { UserToken } from './dto/UserTokenDto';
+import { AddressDto } from './dto/AddressDto';
 
 @Controller('/users')
 export class UserController {
@@ -50,6 +51,30 @@ export class UserController {
   ): Promise<ShoppingCartProduct[]  | HttpException>{
     return this.userService.getCart(
       user,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('/addresses')
+  @HttpCode(HttpStatus.CREATED)
+  getAddress(
+    @GetUser() user: UserToken,
+  ): Promise<Address[]  | HttpException>{
+    return this.userService.getAddress(
+      user,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('/address')
+  @HttpCode(HttpStatus.CREATED)
+  addNewAddress(
+    @GetUser() user: UserToken,
+    @Body() address: AddressDto
+  ): Promise<Address | HttpException>{
+    return this.userService.addNewAddress(
+      user,
+      address
     );
   }
 }

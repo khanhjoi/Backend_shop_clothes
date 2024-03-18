@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  Address,
   Product,
   ShoppingCart,
   ShoppingCartProduct,
@@ -16,6 +17,7 @@ import { ProductCartDto } from './dto/ProductCartDto';
 import { UserToken } from './dto/UserTokenDto';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 import { HttpAdapterHost } from '@nestjs/core';
+import { AddressDto } from './dto/AddressDto';
 
 @Injectable()
 export class UserService {
@@ -62,15 +64,18 @@ export class UserService {
                     name: true,
                     mainImage: true,
                     price: true,
+                    id: true,
                   },
                 },
                 Color: {
                   select: {
+                    id: true,
                     color: true,
                   },
                 },
                 Size: {
                   select: {
+                    id: true,
                     name: true,
                   },
                 },
@@ -144,6 +149,45 @@ export class UserService {
     }
   }
 
+  async getAddress(user:UserToken):Promise<Address[]> {
+    try {
+      const address = await this.prisma.address.findMany({
+        where:{ 
+          accountId : user.sub,
+        }
+      })
+
+      if(!address) throw new NotFoundException(`User not found`);
+
+      return address;
+    } catch (error) {
+      // throw new ExceptionsHandler(error);
+    }
+  }
+
+  async addNewAddress(user:UserToken, address: AddressDto):Promise<Address>{
+    try {
+      const userDB = await this.prisma.user.findUnique({
+        where:{
+          id: user.sub
+        }
+      })
+
+      if(!userDB) throw new NotFoundException(`user not found`);
+
+      const addressDB = await this.prisma.address.create({
+        data: {
+          accountId: userDB.id,
+          nameAddress: address.nameAddress
+        }
+      })
+
+      return addressDB
+    } catch (error) {
+      throw new ExceptionsHandler(error);
+    }
+  }
+
   /**
     function update product cart 
    * if quantity = 0 -> delete product in cart 
@@ -178,7 +222,7 @@ export class UserService {
       isCartDetailExist &&
       productCart.quantity === 0
     ) {
-      await this.prisma.shoppingCartProduct.delete(
+      const cartDelete = await this.prisma.shoppingCartProduct.delete(
         {
           where: {
             shoppingCartId_productOptionsProductId_productOptionsSizeId_productOptionsColorId:
@@ -194,10 +238,7 @@ export class UserService {
           },
         },
       );
-      throw new HttpException(
-        'Delete product in cart',
-        HttpStatus.OK,
-      );
+      return cartDelete;
     }
 
     if (productCart.quantity > 0) {
@@ -238,6 +279,7 @@ export class UserService {
         );
       }
     }
-    return null;
   }
+
+
 }

@@ -8,6 +8,7 @@ import { ProductsModule } from 'models/products/products.module';
 import { ReceiptModule } from 'models/receipt/receipt.module';
 import { CategoryModule } from 'models/category/category.module';
 import { ImageModule } from 'models/image/image.module';
+import { OrderModule } from 'models/orders/orderes.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ImageModule } from 'models/image/image.module';
     CategoryModule,
     ImageModule,
     ProductsModule,
+    OrderModule,
     PrismaModule,
     ConfigModule.forRoot({ isGlobal: true }),
   ],
