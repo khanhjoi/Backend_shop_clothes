@@ -1,17 +1,24 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpException,
   HttpStatus,
   Param,
   Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Address, ShoppingCart, ShoppingCartProduct, User } from '@prisma/client';
+import {
+  Address,
+  ShoppingCart,
+  ShoppingCartProduct,
+  User,
+} from '@prisma/client';
 import { Request } from 'express';
 import { GetUser } from '../../auth/decorator';
 import { JwtGuard } from '../../auth/guard';
@@ -26,8 +33,14 @@ export class UserController {
 
   @UseGuards(JwtGuard)
   @Get('/profile')
-  getProfile(@GetUser() user: User) {
-    return this.userService.findOne(user.email);;
+  getProfile(@GetUser() user: UserToken) {
+    return this.userService.getUserById(user.sub);
+  }
+
+  @UseGuards(JwtGuard)
+  @Put('/profile')
+  updateUser(@GetUser() user: UserToken, @Body() data:any) {
+    return this.userService.updateUser(user, data);
   }
 
   @UseGuards(JwtGuard)
@@ -36,7 +49,9 @@ export class UserController {
   updateProductInCart(
     @GetUser() user: UserToken,
     @Body() productCart: ProductCartDto,
-  ): Promise<ShoppingCartProduct | HttpException>{
+  ): Promise<
+    ShoppingCartProduct | HttpException
+  > {
     return this.userService.updateProductInCart(
       user,
       productCart,
@@ -48,10 +63,10 @@ export class UserController {
   @HttpCode(HttpStatus.CREATED)
   getCart(
     @GetUser() user: UserToken,
-  ): Promise<ShoppingCartProduct[]  | HttpException>{
-    return this.userService.getCart(
-      user,
-    );
+  ): Promise<
+    ShoppingCartProduct[] | HttpException
+  > {
+    return this.userService.getCart(user);
   }
 
   @UseGuards(JwtGuard)
@@ -59,10 +74,8 @@ export class UserController {
   @HttpCode(HttpStatus.CREATED)
   getAddress(
     @GetUser() user: UserToken,
-  ): Promise<Address[]  | HttpException>{
-    return this.userService.getAddress(
-      user,
-    );
+  ): Promise<Address[] | HttpException> {
+    return this.userService.getAddress(user);
   }
 
   @UseGuards(JwtGuard)
@@ -70,11 +83,23 @@ export class UserController {
   @HttpCode(HttpStatus.CREATED)
   addNewAddress(
     @GetUser() user: UserToken,
-    @Body() address: AddressDto
-  ): Promise<Address | HttpException>{
+    @Body() address: AddressDto,
+  ): Promise<Address | HttpException> {
     return this.userService.addNewAddress(
       user,
-      address
+      address,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Delete('/address/:id')
+  @HttpCode(HttpStatus.CREATED)
+  deleteAddress(
+    @GetUser() user: UserToken,
+    @Param('id') addressId: number,
+  ): Promise<Address | HttpException> {
+    return this.userService.deleteAddress(
+      addressId,
     );
   }
 }

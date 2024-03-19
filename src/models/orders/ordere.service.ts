@@ -7,45 +7,10 @@ import { NotFoundError } from 'rxjs';
 @Injectable()
 export class OrderService {
   constructor(private prisma: PrismaService) {}
-  async getOrder(user: any) {
-    try {
-    } catch (error) {}
-  }
-
-  async createOrder(user: any, order: any) {
-    try {
-      const createOrder =
-        await this.prisma.order.create({
-          data: {
-            userId: user.sub,
-            address: order.address,
-            status: 'IN_PROGRESS',
-            total: order.total,
-          },
-        });
-
-      if (!createOrder)
-        throw new NotFoundError(
-          'some error occurred while creating',
-        );
-
-      await this.createOrderDetail(
-        createOrder.id,
-        order.orderDetail,
-      );
-
-      await this.removeCartDetail(user.sub);
-      return createOrder;
-    } catch (error) {
-      console.log(error);
-      throw new ExceptionsHandler(error);
-    }
-  }
-
-  async getOrders(user: any): Promise<Order> {
+  async getOrders(user: any): Promise<Order[]> {
     try {
       const order =
-        await this.prisma.order.findFirst({
+        await this.prisma.order.findMany({
           where: {
             userId: user.sub,
           },
@@ -81,6 +46,40 @@ export class OrderService {
       throw new ExceptionsHandler(error);
     }
   }
+  async getOrder(user: any) {
+    try {
+    } catch (error) {}
+  }
+
+  async createOrder(user: any, order: any) {
+    try {
+      const createOrder =
+        await this.prisma.order.create({
+          data: {
+            userId: user.sub,
+            address: order.address,
+            status: 'IN_PROGRESS',
+            total: order.total,
+          },
+        });
+
+      if (!createOrder)
+        throw new NotFoundError(
+          'some error occurred while creating',
+        );
+
+      await this.createOrderDetail(
+        createOrder.id,
+        order.orderDetail,
+      );
+
+      await this.removeCartDetail(user.sub);
+      return createOrder;
+    } catch (error) {
+      console.log(error);
+      throw new ExceptionsHandler(error);
+    }
+  }
 
   async getOrdersByAdmin() {
     try {
@@ -91,7 +90,10 @@ export class OrderService {
     orderId: number,
     orderDetail: any,
   ) {
-    if(orderDetail.length <= 0) throw new Error('orderDetail must have value')
+    if (orderDetail.length <= 0)
+      throw new Error(
+        'orderDetail must have value',
+      );
 
     for (const option of orderDetail) {
       const orderDetailOption =

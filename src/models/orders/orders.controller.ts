@@ -8,6 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { OrderService } from './ordere.service';
+import { Order } from '@prisma/client';
 
 @Controller()
 export class OrderController {
@@ -27,7 +28,7 @@ export class OrderController {
   @Get('/user/orders')
   async getAllOrder(
     @GetUser() user: any,
-  ): Promise<any> {
+  ): Promise<Order[]> {
     return this.orderService.getOrders(user);
   }
 

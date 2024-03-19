@@ -35,6 +35,69 @@ export class UserService {
     return user;
   }
 
+  async getUserById(
+    id: number,
+  ): Promise<User | undefined> {
+    const user = await this.prisma.user.findFirst(
+      {
+        where: { id: id },
+      },
+    );
+    if (user) delete user.role;
+    return user;
+  }
+
+  async updateUser(user: UserToken, data: any) {
+    try {
+      const userDB =
+        await this.prisma.user.findUnique({
+          where: {
+            id: user.sub,
+          },
+        });
+
+      if (!userDB)
+        throw new Error(
+          `User not exit to update`,
+        );
+
+      const checkEmail =
+        await this.prisma.user.findFirst({
+          where: { email: data.email },
+        });
+
+      if (checkEmail)
+        throw new Error(
+          'email has already been taken',
+        );
+
+      const updateUser = await this.prisma.user.update({
+        where: {
+          id: userDB.id
+        }, 
+        data: {
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone
+        },
+        select: {
+          email: true,
+          lastName: true,
+          firstName: true,
+          phone: true,
+          role: true
+        }
+      })
+
+      return updateUser
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
   /**
    * get cart of user
    * @param user
@@ -149,15 +212,21 @@ export class UserService {
     }
   }
 
-  async getAddress(user:UserToken):Promise<Address[]> {
+  async getAddress(
+    user: UserToken,
+  ): Promise<Address[]> {
     try {
-      const address = await this.prisma.address.findMany({
-        where:{ 
-          accountId : user.sub,
-        }
-      })
+      const address =
+        await this.prisma.address.findMany({
+          where: {
+            accountId: user.sub,
+          },
+        });
 
-      if(!address) throw new NotFoundException(`User not found`);
+      if (!address)
+        throw new NotFoundException(
+          `User not found`,
+        );
 
       return address;
     } catch (error) {
@@ -165,24 +234,56 @@ export class UserService {
     }
   }
 
-  async addNewAddress(user:UserToken, address: AddressDto):Promise<Address>{
+  async addNewAddress(
+    user: UserToken,
+    address: AddressDto,
+  ): Promise<Address> {
     try {
-      const userDB = await this.prisma.user.findUnique({
-        where:{
-          id: user.sub
-        }
-      })
+      const userDB =
+        await this.prisma.user.findUnique({
+          where: {
+            id: user.sub,
+          },
+        });
 
-      if(!userDB) throw new NotFoundException(`user not found`);
+      if (!userDB)
+        throw new NotFoundException(
+          `user not found`,
+        );
 
-      const addressDB = await this.prisma.address.create({
-        data: {
-          accountId: userDB.id,
-          nameAddress: address.nameAddress
-        }
-      })
+      const addressDB =
+        await this.prisma.address.create({
+          data: {
+            accountId: userDB.id,
+            nameAddress: address.nameAddress,
+          },
+        });
 
-      return addressDB
+      return addressDB;
+    } catch (error) {
+      throw new ExceptionsHandler(error);
+    }
+  }
+
+  async deleteAddress(
+    addressId: number,
+  ): Promise<Address> {
+    try {
+      if (typeof addressId === 'string') {
+        addressId = parseInt(addressId, 10);
+      }
+
+      const address =
+        await this.prisma.address.delete({
+          where: {
+            id: addressId,
+          },
+        });
+
+      if (!address)
+        throw new Error('Address not found');
+
+      return address;
     } catch (error) {
       throw new ExceptionsHandler(error);
     }
@@ -222,22 +323,23 @@ export class UserService {
       isCartDetailExist &&
       productCart.quantity === 0
     ) {
-      const cartDelete = await this.prisma.shoppingCartProduct.delete(
-        {
-          where: {
-            shoppingCartId_productOptionsProductId_productOptionsSizeId_productOptionsColorId:
-              {
-                shoppingCartId: cart.id,
-                productOptionsColorId:
-                  productCart.colorId,
-                productOptionsProductId:
-                  productCart.productId,
-                productOptionsSizeId:
-                  productCart.sizeId,
-              },
+      const cartDelete =
+        await this.prisma.shoppingCartProduct.delete(
+          {
+            where: {
+              shoppingCartId_productOptionsProductId_productOptionsSizeId_productOptionsColorId:
+                {
+                  shoppingCartId: cart.id,
+                  productOptionsColorId:
+                    productCart.colorId,
+                  productOptionsProductId:
+                    productCart.productId,
+                  productOptionsSizeId:
+                    productCart.sizeId,
+                },
+            },
           },
-        },
-      );
+        );
       return cartDelete;
     }
 
@@ -280,6 +382,4 @@ export class UserService {
       }
     }
   }
-
-
 }
