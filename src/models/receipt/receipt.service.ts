@@ -2,6 +2,7 @@ import {
   HttpCode,
   HttpException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -24,6 +25,7 @@ import {
 } from 'models/products/dto/productDto';
 import { ImageService } from 'models/image/image.service';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
+import { UserToken } from 'models/users/dto/UserTokenDto';
 
 @Injectable()
 export class ReceiptService {
@@ -34,8 +36,33 @@ export class ReceiptService {
     private category: CategoryService,
   ) {}
 
-  async getReceipts(): Promise<any> {
-    return 'Receipts';
+  async getReceipts(
+    user: UserToken,
+  ): Promise<any> {
+    try {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
+        throw new Error(
+          'Người dùng không có quyền truy cập!',
+        );
+      }
+
+      const receipts =
+        await this.prisma.receipt.findMany({
+          include: {
+            
+            receiptDetail: true,
+          },
+        });
+
+      return receipts;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
   }
 
   async getReceipt(id: number): Promise<any> {
@@ -72,6 +99,7 @@ export class ReceiptService {
         {
           shopId: receiptDto.shopId,
           totalPrice: totalPrice,
+          nameShop: receiptDto.nameShop,
           nameReceipt: receiptDto.nameReceipt,
           receiptDetail: {
             createMany: {
@@ -111,7 +139,6 @@ export class ReceiptService {
     detailProduct: ReceiptDetail,
   ) {
     try {
-
       const category =
         await this.prisma.category.findUnique({
           where: { id: detailProduct.category },
@@ -122,7 +149,6 @@ export class ReceiptService {
           'Cannot find category',
         );
       }
-
 
       let product =
         await this.prisma.product.findFirst({
@@ -135,8 +161,6 @@ export class ReceiptService {
           },
         });
       if (!product) {
-   
-
         await this.createProductIfNotExists(
           detailProduct,
         );
@@ -161,8 +185,6 @@ export class ReceiptService {
     detailProduct: ProductDto,
   ) {
     try {
-
-
       // create new product
       const product =
         await this.prisma.product.create({
@@ -178,7 +200,7 @@ export class ReceiptService {
           },
         });
       // create options product
-  
+
       await this.createOptions(
         detailProduct.options,
         product,
@@ -249,7 +271,12 @@ export class ReceiptService {
     let totalPrice = 0;
     listProduct.forEach(
       (product: ReceiptDetail) => {
-        totalPrice += product.price;
+        let number = 0;
+        for (const option of product.options) {
+          number += option.quantity;
+        }
+
+        totalPrice += product.price * number;
       },
     );
     return totalPrice;
@@ -289,8 +316,6 @@ export class ReceiptService {
     product: Product,
   ) {
     try {
-
-
       for (const optionArr of options) {
         const color =
           await this.isColorExist(optionArr);
@@ -311,14 +336,12 @@ export class ReceiptService {
               },
             },
           );
-  
 
         await this.createImageColor(
           option,
           optionArr.images,
         );
       }
-
     } catch (error) {
       throw new ExceptionsHandler(error);
     }

@@ -12,7 +12,7 @@ import { NotFoundError } from 'rxjs';
 @Injectable()
 export class OrderService {
   constructor(private prisma: PrismaService) {}
-  
+
   async getOrders(user: any): Promise<Order[]> {
     try {
       const order =
@@ -196,10 +196,14 @@ export class OrderService {
 
   // admin
 
-  async getOrdersAdmin(user: UserToken):Promise<Order[]> {
+  async getOrdersAdmin(
+    user: UserToken,
+  ): Promise<Order[]> {
     try {
-
-      if (user.role !== 'ADMIN' && user.role !== 'STAFF') {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
         throw new ForbiddenException(); // Throwing ForbiddenException for non-admin users
       }
 
@@ -223,13 +227,33 @@ export class OrderService {
                     Product: true,
                   },
                 },
-                quantity: true
+                quantity: true,
               },
             },
           },
         });
-      if(!orders) throw new Error('orders must be specified');
+      if (!orders)
+        throw new Error(
+          'orders must be specified',
+        );
       return orders;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
+  async getReceipt(user: UserToken) {
+    try {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
+        throw new ForbiddenException(); // Throwing ForbiddenException for non-admin users
+      }
+
+      
     } catch (error) {
       throw new InternalServerErrorException(
         error.message,

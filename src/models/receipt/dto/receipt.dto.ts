@@ -46,6 +46,10 @@ export class ReceiptDto {
 
   @IsString()
   @IsNotEmpty()
+  nameShop: string;
+
+  @IsString()
+  @IsNotEmpty()
   nameReceipt: string;
 
   @IsArray()

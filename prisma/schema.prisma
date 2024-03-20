@@ -55,8 +55,9 @@ model Address {
 }
 
 model Receipt {
-  id            Int             @id @default(autoincrement())
-  shopId        Int
+  id     Int @id @default(autoincrement())
+  shopId Int
+  nameShop String
   createdAt     DateTime        @default(now())
   nameReceipt   String
   totalPrice    Decimal
@@ -108,7 +109,7 @@ model ShoppingCartProduct {
 
 model Order {
   id          Int           @id @default(autoincrement())
-  userId      Int          
+  userId      Int
   address     String
   status      Status
   total       Decimal

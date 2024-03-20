@@ -1,24 +1,30 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
 import { ReceiptService } from './receipt.service';
 import { ReceiptDto } from './dto/receipt.dto';
+import { JwtGuard } from '@auth/guard';
+import { GetUser } from '@auth/decorator';
+import { UserToken } from 'models/users/dto/UserTokenDto';
 
-@Controller('receipt')
+@Controller('/receipt')
 export class ReceiptController {
   constructor( private receiptSV: ReceiptService) {}
   
-  @Get('')
+  @UseGuards(JwtGuard)
+  @Get('/')
   @HttpCode(HttpStatus.OK)
-  async getReceipts() {
-    return this.receiptSV.getReceipts();
+  async getReceipts(
+    @GetUser() user: UserToken
+  ) {
+    return this.receiptSV.getReceipts(user);
   }
 
-  @Get(':id')
+  @Get('/:id')
   @HttpCode(HttpStatus.OK)
   async getReceipt(@Param('id') id: number) {
     return this.receiptSV.getReceipt(id);
   }
 
-  @Post('')
+  @Post('/')
   @HttpCode(HttpStatus.OK)
   async createReceipt(@Body() receiptDto: ReceiptDto) {
     return this.receiptSV.createReceipt(receiptDto);

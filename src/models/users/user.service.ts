@@ -17,17 +17,21 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ProductCartDto } from './dto/ProductCartDto';
 import { UserToken } from './dto/UserTokenDto';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
-
+import * as argon from 'argon2';
 import { AddressDto } from './dto/AddressDto';
 import { AuthService } from '@auth/auth.service';
+import { AuthDto } from '@auth/dto';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService ) {}
+  constructor(private prisma: PrismaService) {}
 
   async getUsers(user: UserToken) {
     try {
-      if (user.role !== 'ADMIN' && user.role !== 'STAFF') {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
         throw new ForbiddenException(); // Throwing ForbiddenException for non-admin users
       }
       const users =
@@ -55,31 +59,37 @@ export class UserService {
     }
   }
 
-  async deleteUserAdmin(user: UserToken, userId: string) {
+  async deleteUserAdmin(
+    user: UserToken,
+    userId: string,
+  ) {
     try {
-      if (user.role !== "ADMIN") {
-        throw new Error('Không có quyền thực hiện');
+      if (user.role !== 'ADMIN') {
+        throw new Error(
+          'Không có quyền thực hiện',
+        );
       }
-  
+
       const id = parseInt(userId, 10); // Ensure id is parsed correctly
-  
+
       // Fetch user details including related entities
-      const userToDelete = await this.prisma.user.findUnique({
-        where: {
-          id: id,
-        },
-        include: {
-          cart: true,
-          orders: true,
-          addresses: true,
-          rating: true,
-        },
-      });
-  
+      const userToDelete =
+        await this.prisma.user.findUnique({
+          where: {
+            id: id,
+          },
+          include: {
+            cart: true,
+            orders: true,
+            addresses: true,
+            rating: true,
+          },
+        });
+
       if (!userToDelete) {
         throw new Error('User not found');
       }
-  
+
       // Delete all related entities
       if (userToDelete.cart) {
         await this.prisma.shoppingCart.delete({
@@ -88,50 +98,141 @@ export class UserService {
           },
         });
       }
-  
-      await Promise.all(userToDelete.orders.map(async (order) => {
-        await this.prisma.orderDetail.deleteMany({
-          where: {
-            orderId: order.id,
-          }
-        })
-        await this.prisma.order.delete({
-          where: {
-            id: order.id,
+
+      await Promise.all(
+        userToDelete.orders.map(async (order) => {
+          await this.prisma.orderDetail.deleteMany(
+            {
+              where: {
+                orderId: order.id,
+              },
+            },
+          );
+          await this.prisma.order.delete({
+            where: {
+              id: order.id,
+            },
+          });
+        }),
+      );
+
+      await Promise.all(
+        userToDelete.addresses.map(
+          async (address) => {
+            await this.prisma.address.delete({
+              where: {
+                id: address.id,
+              },
+            });
           },
-        });
-        
-      }));
-  
-      await Promise.all(userToDelete.addresses.map(async (address) => {
-        await this.prisma.address.delete({
-          where: {
-            id: address.id,
+        ),
+      );
+
+      await Promise.all(
+        userToDelete.rating.map(
+          async (rating) => {
+            await this.prisma.rating.delete({
+              where: {
+                id: rating.id,
+              },
+            });
           },
-        });
-      }));
-  
-      await Promise.all(userToDelete.rating.map(async (rating) => {
-        await this.prisma.rating.delete({
-          where: {
-            id: rating.id,
-          },
-        });
-      }));
-  
+        ),
+      );
+
       // Now, delete the user
-      const deletedUser = await this.prisma.user.delete({
-        where: {
-          id: id,
-        },
-      });
-  
+      const deletedUser =
+        await this.prisma.user.delete({
+          where: {
+            id: id,
+          },
+        });
+
       return deletedUser;
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      throw new InternalServerErrorException(
+        error.message,
+      );
     }
   }
-  
+
+  async updateUserAdmin(
+    user: UserToken,
+    userUpdate: AuthDto,
+    userUpdateId: string,
+  ): Promise<User> {
+    try {
+      if (user.role !== 'ADMIN') {
+        throw new Error(
+          'Người dùng không có quyền!',
+        );
+      }
+
+      const hashPassword = await argon.hash(
+        userUpdate.password,
+      );
+
+      let id = 0;
+      if (typeof userUpdateId === 'string') {
+        id = parseInt(userUpdateId);
+      }
+
+      let userDB =
+        await this.prisma.user.findUnique({
+          where: {
+            id: id,
+          },
+        });
+
+      if (!userDB)
+        throw new Error(
+          'Người dùng không tồn tại',
+        );
+
+      const userExitEmail =
+        await this.prisma.user.findFirst({
+          where: {
+            email: userUpdate.email,
+          },
+        });
+
+      if (userExitEmail && userDB.email !== userUpdate.email)
+        throw new Error(
+          'Email đã có người xử dụng',
+        );
+
+      const userUpdateDB =
+        await this.prisma.user.update({
+          where: {
+            id: id,
+          },
+          data: {
+            firstName: userUpdate.firstName,
+            lastName: userUpdate.lastName,
+            phone: userUpdate.phone,
+            email: userUpdate.email,
+            password:
+              userUpdate.password ===
+              userDB.password
+                ? userUpdate.password
+                : hashPassword,
+            role: userUpdate.role,
+          },
+        });
+
+      if (!userUpdateDB)
+        throw new Error(
+          'Có lỗi xảy ra khi cập nhật người dùng',
+        );
+
+      return userUpdateDB;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
   /**
    * @param email
    * @returns User
@@ -179,7 +280,6 @@ export class UserService {
         throw new Error(
           `User not exit to update`,
         );
-
 
       const updateUser =
         await this.prisma.user.update({
@@ -505,6 +605,4 @@ export class UserService {
       }
     }
   }
-
-
 }

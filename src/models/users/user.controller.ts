@@ -27,6 +27,7 @@ import { UserService } from './user.service';
 import { ProductCartDto } from './dto/ProductCartDto';
 import { UserToken } from './dto/UserTokenDto';
 import { AddressDto } from './dto/AddressDto';
+import { AuthDto } from '@auth/dto';
 
 @Controller('/users')
 export class UserController {
@@ -138,6 +139,21 @@ export class UserController {
   ): Promise<any | HttpException> {
     return this.userService.deleteUserAdmin(
       user,
+      id,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Put('/:id')
+  @HttpCode(HttpStatus.CREATED)
+  updateUserAdmin(
+    @GetUser() user: UserToken,
+    @Body() userUpdate: AuthDto,
+    @Param('id') id: string,
+  ): Promise<User | HttpException> {
+    return this.userService.updateUserAdmin(
+      user,
+      userUpdate,
       id,
     );
   }

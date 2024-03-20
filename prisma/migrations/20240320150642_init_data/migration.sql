@@ -35,6 +35,7 @@ CREATE TABLE "Address" (
 CREATE TABLE "Receipt" (
     "id" SERIAL NOT NULL,
     "shopId" INTEGER NOT NULL,
+    "nameShop" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "nameReceipt" TEXT NOT NULL,
     "totalPrice" DECIMAL(65,30) NOT NULL,
