@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -16,13 +17,125 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ProductCartDto } from './dto/ProductCartDto';
 import { UserToken } from './dto/UserTokenDto';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
-import { HttpAdapterHost } from '@nestjs/core';
+
 import { AddressDto } from './dto/AddressDto';
+import { AuthService } from '@auth/auth.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService ) {}
 
+  async getUsers(user: UserToken) {
+    try {
+      if (user.role !== 'ADMIN' && user.role !== 'STAFF') {
+        throw new ForbiddenException(); // Throwing ForbiddenException for non-admin users
+      }
+      const users =
+        await this.prisma.user.findMany({
+          where: {
+            id: { not: 0 },
+          },
+          select: {
+            email: true,
+            password: true,
+            firstName: true,
+            createdAt: true,
+            lastName: true,
+            phone: true,
+            id: true,
+            role: true,
+          },
+        });
+
+      return users;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
+  async deleteUserAdmin(user: UserToken, userId: string) {
+    try {
+      if (user.role !== "ADMIN") {
+        throw new Error('Không có quyền thực hiện');
+      }
+  
+      const id = parseInt(userId, 10); // Ensure id is parsed correctly
+  
+      // Fetch user details including related entities
+      const userToDelete = await this.prisma.user.findUnique({
+        where: {
+          id: id,
+        },
+        include: {
+          cart: true,
+          orders: true,
+          addresses: true,
+          rating: true,
+        },
+      });
+  
+      if (!userToDelete) {
+        throw new Error('User not found');
+      }
+  
+      // Delete all related entities
+      if (userToDelete.cart) {
+        await this.prisma.shoppingCart.delete({
+          where: {
+            id: userToDelete.cart.id,
+          },
+        });
+      }
+  
+      await Promise.all(userToDelete.orders.map(async (order) => {
+        await this.prisma.orderDetail.deleteMany({
+          where: {
+            orderId: order.id,
+          }
+        })
+        await this.prisma.order.delete({
+          where: {
+            id: order.id,
+          },
+        });
+        
+      }));
+  
+      await Promise.all(userToDelete.addresses.map(async (address) => {
+        await this.prisma.address.delete({
+          where: {
+            id: address.id,
+          },
+        });
+      }));
+  
+      await Promise.all(userToDelete.rating.map(async (rating) => {
+        await this.prisma.rating.delete({
+          where: {
+            id: rating.id,
+          },
+        });
+      }));
+  
+      // Now, delete the user
+      const deletedUser = await this.prisma.user.delete({
+        where: {
+          id: id,
+        },
+      });
+  
+      return deletedUser;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+  
+  /**
+   * @param email
+   * @returns User
+   */
   async findOne(
     email: string,
   ): Promise<User | undefined> {
@@ -31,10 +144,13 @@ export class UserService {
         where: { email: email },
       },
     );
-    if (user) delete user.role;
     return user;
   }
 
+  /**
+   * @param id
+   * @returns User
+   */
   async getUserById(
     id: number,
   ): Promise<User | undefined> {
@@ -47,6 +163,9 @@ export class UserService {
     return user;
   }
 
+  /**
+   * function update  User
+   */
   async updateUser(user: UserToken, data: any) {
     try {
       const userDB =
@@ -61,36 +180,27 @@ export class UserService {
           `User not exit to update`,
         );
 
-      const checkEmail =
-        await this.prisma.user.findFirst({
-          where: { email: data.email },
+
+      const updateUser =
+        await this.prisma.user.update({
+          where: {
+            id: userDB.id,
+          },
+          data: {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phone: data.phone,
+          },
+          select: {
+            email: true,
+            lastName: true,
+            firstName: true,
+            phone: true,
+            role: true,
+          },
         });
 
-      if (checkEmail)
-        throw new Error(
-          'email has already been taken',
-        );
-
-      const updateUser = await this.prisma.user.update({
-        where: {
-          id: userDB.id
-        }, 
-        data: {
-          email: data.email,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          phone: data.phone
-        },
-        select: {
-          email: true,
-          lastName: true,
-          firstName: true,
-          phone: true,
-          role: true
-        }
-      })
-
-      return updateUser
+      return updateUser;
     } catch (error) {
       throw new InternalServerErrorException(
         error.message,
@@ -211,7 +321,10 @@ export class UserService {
       );
     }
   }
-
+  /**
+   * @param user
+   * @returns Address[]
+   */
   async getAddress(
     user: UserToken,
   ): Promise<Address[]> {
@@ -234,6 +347,12 @@ export class UserService {
     }
   }
 
+  /**
+   *
+   * @param user
+   * @param address
+   * @returns NewAddress
+   */
   async addNewAddress(
     user: UserToken,
     address: AddressDto,
@@ -264,7 +383,11 @@ export class UserService {
       throw new ExceptionsHandler(error);
     }
   }
-
+  /**
+   *
+   * @param addressId
+   * @returns Address has Delete
+   */
   async deleteAddress(
     addressId: number,
   ): Promise<Address> {
@@ -382,4 +505,6 @@ export class UserService {
       }
     }
   }
+
+
 }

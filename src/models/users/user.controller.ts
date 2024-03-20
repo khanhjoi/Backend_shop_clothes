@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
   Param,
   Post,
   Put,
@@ -33,14 +34,30 @@ export class UserController {
 
   @UseGuards(JwtGuard)
   @Get('/profile')
-  getProfile(@GetUser() user: UserToken) {
-    return this.userService.getUserById(user.sub);
+  async getProfile(@GetUser() user: UserToken) {
+    try {
+      const profile =
+        await this.userService.getUserById(
+          user.sub,
+        );
+      if (!profile) throw new Error('user not exit');
+      return profile;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message)
+    }
+    return;
   }
 
   @UseGuards(JwtGuard)
   @Put('/profile')
-  updateUser(@GetUser() user: UserToken, @Body() data:any) {
-    return this.userService.updateUser(user, data);
+  updateUser(
+    @GetUser() user: UserToken,
+    @Body() data: any,
+  ) {
+    return this.userService.updateUser(
+      user,
+      data,
+    );
   }
 
   @UseGuards(JwtGuard)
@@ -100,6 +117,28 @@ export class UserController {
   ): Promise<Address | HttpException> {
     return this.userService.deleteAddress(
       addressId,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('')
+  @HttpCode(HttpStatus.CREATED)
+  getUsers(
+    @GetUser() user: UserToken,
+  ): Promise<any | HttpException> {
+    return this.userService.getUsers(user);
+  }
+
+  @UseGuards(JwtGuard)
+  @Delete('/:id')
+  @HttpCode(HttpStatus.CREATED)
+  deleteUser(
+    @GetUser() user: UserToken,
+    @Param('id') id: string,
+  ): Promise<any | HttpException> {
+    return this.userService.deleteUserAdmin(
+      user,
+      id,
     );
   }
 }

@@ -15,4 +15,7 @@ export class UserToken {
 
   @IsNotEmpty()
   exp: number;
+
+  @IsNotEmpty()
+  role: string;
 }

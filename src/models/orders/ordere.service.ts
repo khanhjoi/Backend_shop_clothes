@@ -1,12 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 import { Order } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
+import { UserToken } from 'models/users/dto/UserTokenDto';
 import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class OrderService {
   constructor(private prisma: PrismaService) {}
+  
   async getOrders(user: any): Promise<Order[]> {
     try {
       const order =
@@ -46,6 +52,7 @@ export class OrderService {
       throw new ExceptionsHandler(error);
     }
   }
+
   async getOrder(user: any) {
     try {
     } catch (error) {}
@@ -184,6 +191,49 @@ export class OrderService {
       return shoppingCartDetail;
     } catch (error) {
       throw new ExceptionsHandler(error);
+    }
+  }
+
+  // admin
+
+  async getOrdersAdmin(user: UserToken):Promise<Order[]> {
+    try {
+
+      if (user.role !== 'ADMIN' && user.role !== 'STAFF') {
+        throw new ForbiddenException(); // Throwing ForbiddenException for non-admin users
+      }
+
+      const orders =
+        await this.prisma.order.findMany({
+          include: {
+            user: {
+              select: {
+                email: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+              },
+            },
+            OrderDetail: {
+              select: {
+                productOption: {
+                  include: {
+                    Color: true,
+                    Size: true,
+                    Product: true,
+                  },
+                },
+                quantity: true
+              },
+            },
+          },
+        });
+      if(!orders) throw new Error('orders must be specified');
+      return orders;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
     }
   }
 }

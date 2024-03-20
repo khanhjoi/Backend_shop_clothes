@@ -43,4 +43,14 @@ export class OrderController {
       order,
     );
   }
+  @UseGuards(JwtGuard)
+  @Get('/admin/orders')
+  async getOrdersAdmin(
+    @GetUser() user: any,
+    @Body() order: any,
+  ): Promise<any> {
+    return this.orderService.getOrdersAdmin(
+      user
+    );
+  }
 }

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   HttpCode,
+  HttpException,
   HttpStatus,
   ParseIntPipe,
   Post,
@@ -14,6 +15,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetCurrentUserId } from './decorator/get-current-userId.decorator';
 import { GetCurrentUser } from './decorator/get-current-user.decorator';
 import { RtGuard } from './guard/rt-jwt.guard';
+import { JwtGuard } from './guard';
+import { GetUser } from './decorator';
+import { UserToken } from 'models/users/dto/UserTokenDto';
 
 @Controller('/auth')
 export class AuthController {
@@ -53,6 +57,14 @@ export class AuthController {
     return this.authService.signupLocal(dto);
   }
 
+  @HttpCode(HttpStatus.CREATED) // this edit for code
+  @Post('/local/signup')
+  async signupLocalAdmin(
+    @Body() dto: AuthDto,
+  ): Promise<Tokens> {
+    return this.authService.signupLocal(dto);
+  }
+
   @HttpCode(HttpStatus.OK)
   @Post('/local/signin')
   signinLocal(@Body() dto: AuthDtoSignIn) {
@@ -71,8 +83,31 @@ export class AuthController {
   @Post('/refresh')
   refreshTokens(
     @GetCurrentUserId() userId: number,
-    @GetCurrentUser('refreshToken') refreshToken: string
+    @GetCurrentUser('refreshToken')
+    refreshToken: string,
   ) {
-    return this.authService.refreshTokens(userId, refreshToken);
+    return this.authService.refreshTokens(
+      userId,
+      refreshToken,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('/local/admin/signin')
+  signinLocalAdmin(@Body() dto: AuthDtoSignIn) {
+    return this.authService.signinLocalAdmin(dto);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('/local/admin/signup')
+  @HttpCode(HttpStatus.CREATED)
+  getUsers(
+    @GetUser() user: UserToken,
+    @Body() dto: AuthDto,
+  ): Promise<any | HttpException> {
+    return this.authService.signupLocalAdmin(
+      dto,
+      user,
+    );
   }
 }

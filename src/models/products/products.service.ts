@@ -40,7 +40,9 @@ export class ProductService {
 
     let whereFilter: any = {
       price: filter.price,
+      name: filter.name
     };
+
 
     if (
       filter.categoryId &&
@@ -50,7 +52,6 @@ export class ProductService {
         filter.categoryId,
       );
     }
-
     return paginate(
       this.prisma.product,
       {

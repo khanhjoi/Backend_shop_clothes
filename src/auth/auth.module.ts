@@ -19,5 +19,8 @@ import { RefreshStrategy } from './strategies/refresh.strategy';
     AccessStrategy,
     RefreshStrategy,
   ],
+  exports: [
+    AuthService
+  ]
 })
 export class AuthModule {}
