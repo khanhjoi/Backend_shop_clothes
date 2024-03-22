@@ -196,7 +196,10 @@ export class UserService {
           },
         });
 
-      if (userExitEmail && userDB.email !== userUpdate.email)
+      if (
+        userExitEmail &&
+        userDB.email !== userUpdate.email
+      )
         throw new Error(
           'Email đã có người xử dụng',
         );
@@ -406,6 +409,22 @@ export class UserService {
             id: productCart.productId,
           },
         });
+
+      const option =
+        await this.prisma.productOptions.findFirst(
+          {
+            where: {
+              productId: productCart.productId,
+              sizeId: productCart.sizeId,
+              colorId: productCart.colorId,
+            },
+          },
+        );
+
+      if (option.quantity <= 0) {
+        throw new Error('Sản phẩm đã hết hàng!!');
+      }
+
       const cartDetail =
         await this.findOrCreateCartDetail(
           cart,
@@ -417,7 +436,7 @@ export class UserService {
     } catch (error) {
       // Handle any unexpected errors
       throw new InternalServerErrorException(
-        'Something went wrong while updating the product in the cart',
+        error.message,
       );
     }
   }

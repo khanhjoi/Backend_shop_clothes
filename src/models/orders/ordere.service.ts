@@ -4,10 +4,11 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
-import { Order } from '@prisma/client';
+import { Order, Prisma, Status } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { UserToken } from 'models/users/dto/UserTokenDto';
 import { NotFoundError } from 'rxjs';
+import { UpdateStatusReq } from './types/updateStatus';
 
 @Injectable()
 export class OrderService {
@@ -38,6 +39,7 @@ export class OrderService {
                     Product: true,
                   },
                 },
+                quantity: true,
               },
             },
           },
@@ -56,6 +58,47 @@ export class OrderService {
   async getOrder(user: any) {
     try {
     } catch (error) {}
+  }
+
+  async updateOrder(
+    user: UserToken,
+    orderStatus: any,
+    orderId: string
+  ):Promise<Order> {
+    try {
+      let id:number;
+      if(typeof orderStatus === 'string') {
+        id = parseInt(orderId, 10);
+      }
+
+      const order =
+        await this.prisma.order.findFirst({
+          where: {
+            id: id,
+          },
+        });
+
+      if (order.userId !== user.sub)
+        throw new Error(
+          'Người dùng không phải chủ đơn hàng',
+        );
+
+      console.log(orderStatus)
+
+      const updateOrder = await this.prisma.order.update({
+        where: {
+          id: order.id
+        },
+        data: {
+          status: orderStatus.orderStatus
+        }
+      })
+      return updateOrder
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
   }
 
   async createOrder(user: any, order: any) {
@@ -252,8 +295,61 @@ export class OrderService {
       ) {
         throw new ForbiddenException(); // Throwing ForbiddenException for non-admin users
       }
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
 
-      
+  async updateOrderAdmin(
+    user: UserToken,
+    updateStatus: UpdateStatusReq,
+  ): Promise<Order> {
+    try {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
+        throw new Error(
+          'Người dùng không có quyền truy cập',
+        );
+      }
+
+      const order =
+        await this.prisma.order.findUnique({
+          where: {
+            id: updateStatus.order.orderId,
+          },
+        });
+
+      if (!order)
+        throw new Error(
+          'Đơn hàng không tồn tại!',
+        );
+
+      if (
+        order.status === 'IS_SUCCESS' ||
+        order.status === 'IS_CANCELLED' ||
+        order.status === 'DELIVERED' ||
+        order.status === 'RETURNED' ||
+        order.status === 'REFUNDED'
+      ) {
+        throw new Error(
+          'Đơn hàng đã kết thúc không thể thay đổi trạng thái!',
+        );
+      }
+      const update =
+        await this.prisma.order.update({
+          where: {
+            id: updateStatus.order.orderId,
+          },
+          data: {
+            status: updateStatus.order.status,
+          },
+        });
+
+      return update;
     } catch (error) {
       throw new InternalServerErrorException(
         error.message,

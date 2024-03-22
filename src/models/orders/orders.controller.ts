@@ -4,7 +4,9 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { OrderService } from './ordere.service';
@@ -25,13 +27,22 @@ export class OrderController {
   }
 
   @UseGuards(JwtGuard)
+  @Put('/user/orders/:id')
+  async updateOrderUser(
+    @GetUser() user: any,
+    @Body() orderStatus:any,
+    @Param('id') id: string
+  ): Promise<Order> {
+    return this.orderService.updateOrder(user, orderStatus, id);
+  }
+
+  @UseGuards(JwtGuard)
   @Get('/user/orders')
   async getAllOrder(
     @GetUser() user: any,
   ): Promise<Order[]> {
     return this.orderService.getOrders(user);
   }
-
 
   
 
@@ -46,6 +57,7 @@ export class OrderController {
       order,
     );
   }
+
   @UseGuards(JwtGuard)
   @Get('/admin/orders')
   async getOrdersAdmin(
@@ -54,6 +66,18 @@ export class OrderController {
   ): Promise<any> {
     return this.orderService.getOrdersAdmin(
       user
+    );
+  } 
+
+  @UseGuards(JwtGuard)
+  @Put('/admin/orders')
+  async updateOrderStatusAdmin(
+    @GetUser() user: any,
+    @Body() order: any,
+  ): Promise<Order> {
+    return this.orderService.updateOrderAdmin(
+      user,
+      order
     );
   }
 }
