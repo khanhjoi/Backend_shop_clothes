@@ -31,22 +31,11 @@ export class ProductController {
   ) {}
 
   @UseGuards(JwtGuard)
-  @Get('/admin') 
+  @Get('/admin')
   async getProductsAdmin(
-    @GetUser() user: UserToken
-  ):Promise<Product[]>{
+    @GetUser() user: UserToken,
+  ): Promise<Product[]> {
     return this.productSV.getProductsAdmin(user);
-  }
-  
-  @UseGuards(JwtGuard)
-  @Put('/admin')
-  async updateProductAdmin() {
-
-  }
-  @UseGuards(JwtGuard)
-  @Put('/delete')
-  async deleteProductAdmin() {
-    
   }
 
   @Get('')
@@ -64,7 +53,19 @@ export class ProductController {
       page,
     });
   }
+  
+  @Get('/discount')
+  @HttpCode(HttpStatus.OK)
+  async getProductsDiscount() {
+    return this.productSV.getProductsDiscount();
+  }
 
+  @UseGuards(JwtGuard)
+  @Put('/admin')
+  async updateProductAdmin() {}
+  @UseGuards(JwtGuard)
+  @Put('/delete')
+  async deleteProductAdmin() {}
 
   @Get('/:id')
   async getProduct(
@@ -74,8 +75,6 @@ export class ProductController {
       parseInt(id),
     );
   }
-
-
 
   @UseGuards(JwtGuard)
   @Post('/:id')
@@ -97,7 +96,7 @@ export class ProductController {
     @Param('id') id: string,
     @GetUser() user: any,
     @Body() comment: CommentDto,
-  ):Promise<Rating> {
+  ): Promise<Rating> {
     return this.productSV.updateComment(
       parseInt(id),
       user,
@@ -105,21 +104,17 @@ export class ProductController {
     );
   }
 
-  
-
   @UseGuards(JwtGuard)
   @Delete('/:id/:comment')
   async deleteComment(
     @Param('id') id: string,
     @Param('comment') commentId: string,
     @GetUser() user: any,
-  ):Promise<String> {
+  ): Promise<String> {
     return this.productSV.deleteComment(
       parseInt(id),
       user,
       parseInt(commentId),
     );
   }
-
-
 }

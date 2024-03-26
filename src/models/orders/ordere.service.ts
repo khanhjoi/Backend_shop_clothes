@@ -4,7 +4,11 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
-import { Order, Prisma, Status } from '@prisma/client';
+import {
+  Order,
+  Prisma,
+  Status,
+} from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { UserToken } from 'models/users/dto/UserTokenDto';
 import { NotFoundError } from 'rxjs';
@@ -63,11 +67,11 @@ export class OrderService {
   async updateOrder(
     user: UserToken,
     orderStatus: any,
-    orderId: string
-  ):Promise<Order> {
+    orderId: string,
+  ): Promise<Order> {
     try {
-      let id:number;
-      if(typeof orderStatus === 'string') {
+      let id: number;
+      if (typeof orderStatus === 'string') {
         id = parseInt(orderId, 10);
       }
 
@@ -83,17 +87,58 @@ export class OrderService {
           'Người dùng không phải chủ đơn hàng',
         );
 
-      console.log(orderStatus)
+      console.log(orderStatus);
 
-      const updateOrder = await this.prisma.order.update({
-        where: {
-          id: order.id
-        },
-        data: {
-          status: orderStatus.orderStatus
+      const updateOrder =
+        await this.prisma.order.update({
+          where: {
+            id: order.id,
+          },
+          data: {
+            status: orderStatus.orderStatus,
+          },
+          include: {
+            OrderDetail: true,
+          },
+        });
+
+      if (updateOrder.status === 'IS_CANCELLED') {
+        for (const product of updateOrder.OrderDetail) {
+          const option =
+            await this.prisma.productOptions.findFirst(
+              {
+                where: {
+                  sizeId:
+                    product.productOptionsSizeId,
+                  colorId:
+                    product.productOptionsColorId,
+                  productId:
+                    product.productOptionsProductId,
+                },
+              },
+            );
+
+          const quantity =
+            option.quantity + product.quantity;
+
+          await this.prisma.productOptions.update(
+            {
+              where: {
+                productId_sizeId_colorId: {
+                  sizeId: option.sizeId,
+                  colorId: option.colorId,
+                  productId: option.productId,
+                },
+              },
+              data: {
+                quantity: quantity,
+              },
+            },
+          );
         }
-      })
-      return updateOrder
+      }
+
+      return updateOrder;
     } catch (error) {
       throw new InternalServerErrorException(
         error.message,
@@ -347,7 +392,46 @@ export class OrderService {
           data: {
             status: updateStatus.order.status,
           },
+          include: {
+            OrderDetail: true,
+          },
         });
+
+      if (update.status === 'IS_CANCELLED') {
+        for (const product of update.OrderDetail) {
+          const option =
+            await this.prisma.productOptions.findFirst(
+              {
+                where: {
+                  sizeId:
+                    product.productOptionsSizeId,
+                  colorId:
+                    product.productOptionsColorId,
+                  productId:
+                    product.productOptionsProductId,
+                },
+              },
+            );
+
+          const quantity =
+            option.quantity + product.quantity;
+
+          await this.prisma.productOptions.update(
+            {
+              where: {
+                productId_sizeId_colorId: {
+                  sizeId: option.sizeId,
+                  colorId: option.colorId,
+                  productId: option.productId,
+                },
+              },
+              data: {
+                quantity: quantity,
+              },
+            },
+          );
+        }
+      }
 
       return update;
     } catch (error) {

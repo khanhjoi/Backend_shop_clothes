@@ -15,6 +15,7 @@ import { GetUser } from '@auth/decorator';
 import { UserToken } from 'models/users/dto/UserTokenDto';
 import { DiscountDto } from './dto/DiscountDto';
 import { Discount } from '@prisma/client';
+import { get } from 'http';
 
 @Controller('/discount')
 export class DiscountController {
@@ -31,7 +32,7 @@ export class DiscountController {
       user,
     );
   }
-
+  
   @UseGuards(JwtGuard)
   @Post('')
   async createDiscount(
@@ -45,7 +46,7 @@ export class DiscountController {
   }
 
   @UseGuards(JwtGuard)
-  @Post(':id/addProduct')
+  @Post('/:id/addProduct')
   async addProductToDiscount(
     @GetUser() user: UserToken,
     @Param('id') discountId: string,

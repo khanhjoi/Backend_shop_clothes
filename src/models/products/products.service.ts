@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 import {
+  Discount,
   Prisma,
   Product,
   Rating,
@@ -28,6 +29,32 @@ const paginate: PaginateFunction = paginator({
 @Injectable()
 export class ProductService {
   constructor(private prisma: PrismaService) {}
+
+  async getProductsDiscount(): Promise<
+    Discount[]
+  > {
+    try {
+      const discount =
+        await this.prisma.discount.findMany({
+          include: {
+            product: {
+              include: {
+                Discount: true,
+              },
+            },
+          },
+        });
+
+      if (!discount)
+        throw new Error(`Discount not found`);
+
+      return discount;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
 
   async getProducts({
     where,
@@ -63,11 +90,7 @@ export class ProductService {
       },
       {
         page,
-        include: {
-          Discount: true,
-        }
       },
-      
     );
   }
 
@@ -294,6 +317,7 @@ export class ProductService {
       );
     }
   }
+
   async updateProductsAdmin() {
     try {
     } catch (error) {
@@ -302,6 +326,7 @@ export class ProductService {
       );
     }
   }
+
   async deleteProductsAdmin() {
     try {
     } catch (error) {
