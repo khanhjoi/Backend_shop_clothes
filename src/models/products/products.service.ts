@@ -63,6 +63,9 @@ export class ProductService {
       },
       {
         page,
+        include: {
+          Discount: true,
+        }
       },
       
     );
@@ -93,6 +96,7 @@ export class ProductService {
               Color: true,
             },
           },
+          Discount: true,
         },
       });
 
