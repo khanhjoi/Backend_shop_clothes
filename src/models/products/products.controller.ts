@@ -22,12 +22,32 @@ import { PaginatedResult } from 'common/decorators/Pagination';
 import { JwtGuard } from '@auth/guard';
 import { GetUser } from '@auth/decorator';
 import { CommentDto } from './dto/CommentDto';
+import { UserToken } from 'models/users/dto/UserTokenDto';
 
 @Controller('/products')
 export class ProductController {
   constructor(
     private productSV: ProductService,
   ) {}
+
+  @UseGuards(JwtGuard)
+  @Get('/admin') 
+  async getProductsAdmin(
+    @GetUser() user: UserToken
+  ):Promise<Product[]>{
+    return this.productSV.getProductsAdmin(user);
+  }
+  
+  @UseGuards(JwtGuard)
+  @Put('/admin')
+  async updateProductAdmin() {
+
+  }
+  @UseGuards(JwtGuard)
+  @Put('/delete')
+  async deleteProductAdmin() {
+    
+  }
 
   @Get('')
   @HttpCode(HttpStatus.OK)
@@ -45,6 +65,7 @@ export class ProductController {
     });
   }
 
+
   @Get('/:id')
   async getProduct(
     @Param('id') id: string,
@@ -53,6 +74,8 @@ export class ProductController {
       parseInt(id),
     );
   }
+
+
 
   @UseGuards(JwtGuard)
   @Post('/:id')
@@ -82,6 +105,8 @@ export class ProductController {
     );
   }
 
+  
+
   @UseGuards(JwtGuard)
   @Delete('/:id/:comment')
   async deleteComment(
@@ -95,4 +120,6 @@ export class ProductController {
       parseInt(commentId),
     );
   }
+
+
 }

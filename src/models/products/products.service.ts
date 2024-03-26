@@ -2,6 +2,7 @@ import {
   BadGatewayException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
@@ -18,6 +19,7 @@ import {
   paginator,
 } from 'common/decorators/Pagination';
 import { CommentDto } from './dto/CommentDto';
+import { UserToken } from 'models/users/dto/UserTokenDto';
 
 const paginate: PaginateFunction = paginator({
   perPage: 6,
@@ -40,9 +42,8 @@ export class ProductService {
 
     let whereFilter: any = {
       price: filter.price,
-      name: filter.name
+      name: filter.name,
     };
-
 
     if (
       filter.categoryId &&
@@ -63,6 +64,7 @@ export class ProductService {
       {
         page,
       },
+      
     );
   }
 
@@ -252,5 +254,56 @@ export class ProductService {
         data: product,
       });
     return newProduct;
+  }
+
+  // admin
+  async getProductsAdmin(
+    user: UserToken,
+  ): Promise<Product[]> {
+    try {
+      if (user.role !== 'ADMIN') {
+        throw new Error(
+          'you do not have permission to access this',
+        );
+      }
+
+      const products =
+        await this.prisma.product.findMany({
+          include: {
+            Discount: true,
+            options: {
+              select: {
+                Color: true,
+                Size: true,
+                images: true,
+              },
+            },
+          },
+        });
+
+      if (!products)
+        throw new Error('products not found');
+      return products;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+  async updateProductsAdmin() {
+    try {
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+  async deleteProductsAdmin() {
+    try {
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
   }
 }

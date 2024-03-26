@@ -17,6 +17,7 @@ import {
   Size,
   Color,
   ProductOptions,
+  Shop,
 } from '@prisma/client';
 import { CategoryService } from 'models/category/category.service';
 import {
@@ -52,7 +53,6 @@ export class ReceiptService {
       const receipts =
         await this.prisma.receipt.findMany({
           include: {
-            
             receiptDetail: true,
           },
         });
@@ -77,8 +77,10 @@ export class ReceiptService {
       for (const product of receiptDto.receiptDetail) {
         await this.createProduct(product);
       }
+
       // Create receipt
       await this.createReceiptHelp(receiptDto);
+
 
       return 'success';
     } catch (error) {
@@ -160,11 +162,15 @@ export class ReceiptService {
             options: true,
           },
         });
+
+
       if (!product) {
+
         await this.createProductIfNotExists(
           detailProduct,
         );
       } else {
+
         await this.updateProductIfExists(
           detailProduct.options,
           product.id,
@@ -228,37 +234,42 @@ export class ReceiptService {
         const color =
           await this.isColorExist(optionArr);
 
-        const option =
-          await this.prisma.productOptions.findFirst(
+        for (const size of optionArr.sizeId) {
+          const option =
+            await this.prisma.productOptions.findFirst(
+              {
+                where: {
+                  productId: productId,
+                  sizeId: size,
+                  colorId: color.id,
+                },
+              },
+            );
+
+          if (!option)
+            throw new NotFoundException(
+              'Option not found',
+            );
+
+          const AddProductToInventory =
+            (option.quantity +=
+              optionArr.quantity);
+
+          await this.prisma.productOptions.update(
             {
               where: {
-                productId: productId,
-                sizeId: optionArr.sizeId,
-                colorId: color.id,
+                productId_sizeId_colorId: {
+                  productId: productId,
+                  sizeId: size,
+                  colorId: color.id,
+                },
+              },
+              data: {
+                quantity: AddProductToInventory,
               },
             },
           );
-
-        if (!option)
-          throw new NotFoundException(
-            'Option not found',
-          );
-
-        const AddProductToInventory =
-          (option.quantity += optionArr.quantity);
-
-        await this.prisma.productOptions.update({
-          where: {
-            productId_sizeId_colorId: {
-              productId: productId,
-              sizeId: optionArr.sizeId,
-              colorId: color.id,
-            },
-          },
-          data: {
-            quantity: AddProductToInventory,
-          },
-        });
+        }
       }
     } catch (error) {
       throw new ExceptionsHandler(error);
@@ -316,7 +327,9 @@ export class ReceiptService {
     product: Product,
   ) {
     try {
+
       for (const optionArr of options) {
+
         const color =
           await this.isColorExist(optionArr);
 
@@ -324,23 +337,26 @@ export class ReceiptService {
           throw new NotFoundException(
             'color not found',
           );
+       
 
-        const option =
-          await this.prisma.productOptions.create(
-            {
-              data: {
-                colorId: color.id,
-                sizeId: optionArr.sizeId,
-                productId: product.id,
-                quantity: optionArr.quantity,
+        for (const size of optionArr.sizeId) {
+          const option =
+            await this.prisma.productOptions.create(
+              {
+                data: {
+                  colorId: color.id,
+                  sizeId: size,
+                  productId: product.id,
+                  quantity: optionArr.quantity,
+                },
               },
-            },
-          );
+            );
 
-        await this.createImageColor(
-          option,
-          optionArr.images,
-        );
+          await this.createImageColor(
+            option,
+            optionArr.images,
+          );
+        }
       }
     } catch (error) {
       throw new ExceptionsHandler(error);
@@ -368,6 +384,43 @@ export class ReceiptService {
       });
     } catch (error) {
       throw new Error(error);
+    }
+  }
+
+  //***************** shop ***********
+  async getShops(): Promise<any> {
+    try {
+      const shops =
+        await this.prisma.shop.findMany();
+      return shops;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
+  async getCategories(): Promise<any> {
+    try {
+      const shops =
+        await this.prisma.category.findMany();
+      return shops;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
+  async getSizes(): Promise<any> {
+    try {
+      const sizes =
+        await this.prisma.size.findMany();
+      return sizes;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
     }
   }
 }

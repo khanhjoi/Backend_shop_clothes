@@ -32,12 +32,14 @@
     "argon2": "^0.31.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "cloudinary": "^2.0.3",
     "pactum": "^3.6.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
+    "streamifier": "^0.1.1",
     "typeorm": "^0.3.20"
   },
   "devDependencies": {
@@ -46,6 +48,7 @@
     "@nestjs/testing": "^10.0.0",
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.2",
+    "@types/multer": "^1.4.11",
     "@types/node": "^20.11.25",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.0",

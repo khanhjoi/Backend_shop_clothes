@@ -55,9 +55,9 @@ model Address {
 }
 
 model Receipt {
-  id     Int @id @default(autoincrement())
-  shopId Int
-  nameShop String
+  id            Int             @id @default(autoincrement())
+  shopId        Int
+  nameShop      String
   createdAt     DateTime        @default(now())
   nameReceipt   String
   totalPrice    Decimal
@@ -145,6 +145,8 @@ model Product {
 
   categoryId Int?
   Category   Category? @relation(fields: [categoryId], references: [id])
+  discountId Int?
+  Discount   Discount? @relation(fields: [discountId], references: [id])
 }
 
 model ProductOptions {
@@ -214,4 +216,6 @@ model Discount {
   dateStart   DateTime
   dateEnd     DateTime
   percent     Float
+
+  product Product[]
 }

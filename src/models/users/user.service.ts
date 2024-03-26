@@ -263,7 +263,6 @@ export class UserService {
         where: { id: id },
       },
     );
-    if (user) delete user.role;
     return user;
   }
 

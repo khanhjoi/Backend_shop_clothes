@@ -9,6 +9,8 @@ import { ReceiptModule } from 'models/receipt/receipt.module';
 import { CategoryModule } from 'models/category/category.module';
 import { ImageModule } from 'models/image/image.module';
 import { OrderModule } from 'models/orders/orderes.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { DiscountModule } from 'models/discount/Discount.module';
 
 @Module({
   imports: [
@@ -21,7 +23,10 @@ import { OrderModule } from 'models/orders/orderes.module';
     ProductsModule,
     OrderModule,
     PrismaModule,
+    DiscountModule,
     ConfigModule.forRoot({ isGlobal: true }),
+    CloudinaryModule,
+ 
   ],
   exports: [AppModule]
 })

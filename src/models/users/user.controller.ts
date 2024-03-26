@@ -46,7 +46,7 @@ export class UserController {
     } catch (error) {
       throw new InternalServerErrorException(error.message)
     }
-    return;
+
   }
 
   @UseGuards(JwtGuard)
