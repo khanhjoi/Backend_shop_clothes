@@ -303,6 +303,7 @@ export class ProductService {
                 Color: true,
                 Size: true,
                 images: true,
+                quantity: true
               },
             },
           },
