@@ -288,7 +288,7 @@ export class ProductService {
     user: UserToken,
   ): Promise<Product[]> {
     try {
-      if (user.role !== 'ADMIN') {
+      if (user.role !== 'ADMIN' && user.role !== "STAFF") {
         throw new Error(
           'you do not have permission to access this',
         );
@@ -303,9 +303,10 @@ export class ProductService {
                 Color: true,
                 Size: true,
                 images: true,
-                quantity: true
+                quantity: true,
               },
             },
+            Category: true,
           },
         });
 

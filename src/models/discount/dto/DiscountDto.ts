@@ -25,4 +25,7 @@ export class DiscountDto {
   @IsNumber()
   @IsNotEmpty()
   percent: number;
+
+ 
+  bannerImage?: string;
 }

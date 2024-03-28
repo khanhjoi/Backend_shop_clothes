@@ -216,6 +216,7 @@ model Discount {
   dateStart   DateTime
   dateEnd     DateTime
   percent     Float
+  bannerImage String?
 
   product Product[]
 }

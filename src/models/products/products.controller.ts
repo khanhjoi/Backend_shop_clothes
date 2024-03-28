@@ -63,6 +63,7 @@ export class ProductController {
   @UseGuards(JwtGuard)
   @Put('/admin')
   async updateProductAdmin() {}
+  
   @UseGuards(JwtGuard)
   @Put('/delete')
   async deleteProductAdmin() {}

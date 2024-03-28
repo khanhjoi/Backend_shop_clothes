@@ -57,6 +57,7 @@ export class DiscountService {
             dateStart: discount.dateStart,
             dateEnd: discount.dateEnd,
             percent: discount.percent,
+            bannerImage: discount.bannerImage
           },
         });
 
@@ -115,6 +116,7 @@ export class DiscountService {
             dateStart: discount.dateStart,
             dateEnd: discount.dateEnd,
             percent: discount.percent,
+            bannerImage: discount.bannerImage
           },
         });
       return discountUpdate;
