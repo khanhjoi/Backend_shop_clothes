@@ -340,6 +340,7 @@ export class UserService {
                     mainImage: true,
                     price: true,
                     id: true,
+                    Discount: true
                   },
                 },
                 Color: {

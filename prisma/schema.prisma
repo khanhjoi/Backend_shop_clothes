@@ -118,7 +118,7 @@ model Order {
   userId      Int
   address     String
   status      Status
-  payment     Payment
+  payment     Payment       @default(UPON_RECEIPT)
   total       Decimal
   user        User          @relation(fields: [userId], references: [id])
   OrderDetail OrderDetail[]

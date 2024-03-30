@@ -4,6 +4,9 @@ CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN', 'STAFF', 'CUSTOMER');
 -- CreateEnum
 CREATE TYPE "Status" AS ENUM ('IN_PROGRESS', 'IS_PENDING', 'IS_SUCCESS', 'IS_CANCELLED', 'DELIVERED', 'RETURNED', 'REFUNDED');
 
+-- CreateEnum
+CREATE TYPE "Payment" AS ENUM ('UPON_RECEIPT', 'VNPAYMENT', 'MOMOPAYMENT');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -94,6 +97,7 @@ CREATE TABLE "Order" (
     "userId" INTEGER NOT NULL,
     "address" TEXT NOT NULL,
     "status" "Status" NOT NULL,
+    "payment" "Payment" NOT NULL DEFAULT 'UPON_RECEIPT',
     "total" DECIMAL(65,30) NOT NULL,
 
     CONSTRAINT "Order_pkey" PRIMARY KEY ("id")

@@ -154,6 +154,7 @@ export class OrderService {
             userId: user.sub,
             address: order.address,
             status: 'IN_PROGRESS',
+            payment: order.payment,
             total: order.total,
           },
         });
