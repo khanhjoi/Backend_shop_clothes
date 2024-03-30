@@ -13,6 +13,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -25,11 +26,13 @@ import {
   Request,
   Response,
 } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @Controller()
 export class OrderController {
   constructor(
     private orderService: OrderService,
+    private configService: ConfigService,
   ) {}
 
   @UseGuards(JwtGuard)
@@ -92,12 +95,19 @@ export class OrderController {
         req.connection.remoteAddress ||
         req.socket.remoteAddress;
 
-      const tmnCode = '7TCNLTSB';
+      const tmnCode =
+        this.configService.get<string>('tmnCode');
       const secretKey =
-        'HZHTGBEAKNCVSDYITREETUAMBHBGYHCK';
+        this.configService.get<string>(
+          'secretKey',
+        );
       let vnpUrl =
-        'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
-      const returnUrl = 'https://sandbox.vnpayment.vn/merchantv2/';
+        this.configService.get<string>('vnpUrl');
+      const returnUrl =
+        this.configService.get<string>(
+          'returnUrl',
+        );
+
       const orderId =
         moment(date).format('DDHHmmss');
       const amount = req.body.amount;
@@ -128,10 +138,9 @@ export class OrderController {
 
       vnp_Params = this.sortObject(vnp_Params);
 
-      const signData = qs.stringify(
-        vnp_Params,
-        { encode: false },
-      );
+      const signData = qs.stringify(vnp_Params, {
+        encode: false,
+      });
       const hmac = crypto.createHmac(
         'sha512',
         secretKey,
@@ -147,7 +156,11 @@ export class OrderController {
           encode: false,
         });
 
-      res.status(200).json(vnpUrl);
+      res.status(200).json({
+        directURL: vnpUrl,
+        secureHashValue: signed,
+        vnp_TxnRef: orderId,
+      });
     } catch (error) {
       console.error(error);
       throw new HttpException(
@@ -157,6 +170,43 @@ export class OrderController {
     }
   }
 
+  @Get('/user/order/VnPay')
+  vnpayReturn(@Query() vnpParams) {
+    let secureHash = vnpParams['vnp_SecureHash'];
+    delete vnpParams['vnp_SecureHash'];
+    delete vnpParams['vnp_SecureHashType'];
+
+    let vnpParamsSorted =
+      this.sortObject(vnpParams);
+
+    let tmnCode =
+      this.configService.get<string>('tmnCode');
+
+    let secretKey =
+      this.configService.get<string>('secretKey');
+
+    let signData = qs.stringify(vnpParamsSorted, {
+      encode: false,
+    });
+
+    let hmac = crypto.createHmac(
+      'sha512',
+      secretKey,
+    );
+
+    let signed = hmac
+      .update(Buffer.from(signData, 'utf-8'))
+      .digest('hex');
+
+    if (secureHash === signed) {
+      // Check if the data in the database is valid and notify the result
+      return {
+        code: vnpParamsSorted['vnp_ResponseCode'],
+      };
+    } else {
+      return { code: '97' };
+    }
+  }
 
   @UseGuards(JwtGuard)
   @Get('/admin/orders')

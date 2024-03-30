@@ -25,6 +25,12 @@ enum Status {
   // Add more status options as needed
 }
 
+enum Payment {
+  UPON_RECEIPT
+  VNPAYMENT
+  MOMOPAYMENT
+}
+
 model User {
   id        Int           @id @default(autoincrement())
   cart      ShoppingCart?
@@ -112,6 +118,7 @@ model Order {
   userId      Int
   address     String
   status      Status
+  payment     Payment
   total       Decimal
   user        User          @relation(fields: [userId], references: [id])
   OrderDetail OrderDetail[]
