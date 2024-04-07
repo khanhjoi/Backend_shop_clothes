@@ -42,15 +42,16 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  email          String  @unique
+  email          String        @unique
   password       String
   firstName      String?
   lastName       String?
-  role           Role    @default(USER)
+  role           Role          @default(USER)
   phone          String?
   refresh_token  String?
   expires_at     Int?
   shoppingCartId Int?
+  OrderDesign    OrderDesign[]
 }
 
 model Address {
@@ -124,9 +125,20 @@ model Order {
   OrderDetail OrderDetail[]
 }
 
-model OrderDetail {
-  orderId Int
+model OrderDesign {
+  id      Int    @id @default(autoincrement())
+  userId  Int
+  address String
+  material String
+  status   Status
+  detail   Json
+  logo     String?
+  total    Decimal?
+  user     User     @relation(fields: [userId], references: [id])
+}
 
+model OrderDetail {
+  orderId                 Int
   quantity                Int
   dateAdd                 DateTime       @default(now())
   productOptionsProductId Int
@@ -182,6 +194,12 @@ model Rating {
   productId Int?
   User      User?    @relation(fields: [userId], references: [id])
   userId    Int?
+}
+
+model Material {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
 }
 
 model Size {

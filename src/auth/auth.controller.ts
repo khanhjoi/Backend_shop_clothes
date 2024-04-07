@@ -62,12 +62,14 @@ export class AuthController {
   async signupLocalAdmin(
     @Body() dto: AuthDto,
   ): Promise<Tokens> {
+    console.log("1232")
     return this.authService.signupLocal(dto);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('/local/signin')
   signinLocal(@Body() dto: AuthDtoSignIn) {
+    console.log(dto)
     return this.authService.signinLocal(dto);
   }
 

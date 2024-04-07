@@ -77,6 +77,20 @@ export class OrderController {
     );
   }
 
+  @UseGuards(JwtGuard)
+  @Post('/user/order/design')
+  async createOrderDesign(
+    @GetUser() user: any,
+    @Body() order: any,
+  ): Promise<any> {
+    return this.orderService.createOrderDesign(
+      user,
+      order,
+    );
+  }
+
+
+  @UseGuards(JwtGuard)
   @Post('/user/order/VnPay')
   createPaymentUrl(
     @Req() req: Request,
@@ -170,6 +184,7 @@ export class OrderController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Get('/user/order/VnPay')
   vnpayReturn(@Query() vnpParams) {
     let secureHash = vnpParams['vnp_SecureHash'];

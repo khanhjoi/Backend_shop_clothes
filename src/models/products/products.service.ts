@@ -1,6 +1,7 @@
 import {
   BadGatewayException,
   ForbiddenException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -11,6 +12,7 @@ import {
   Prisma,
   Product,
   Rating,
+  Size,
   User,
 } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
@@ -335,6 +337,15 @@ export class ProductService {
       throw new InternalServerErrorException(
         error.message,
       );
+    }
+  }
+
+  async getSize():Promise<Size[]> {
+    try {
+      const sizes = await this.prisma.size.findMany();
+      return sizes;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message)
     }
   }
 }

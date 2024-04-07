@@ -6,8 +6,10 @@ import {
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 import {
   Order,
+  OrderDesign,
   Prisma,
   Status,
+  User,
 } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { UserToken } from 'models/users/dto/UserTokenDto';
@@ -174,6 +176,38 @@ export class OrderService {
     } catch (error) {
       console.log(error);
       throw new ExceptionsHandler(error);
+    }
+  }
+
+  async createOrderDesign(
+    user: UserToken,
+    order: any,
+  ): Promise<OrderDesign> {
+    try {
+      console.log();
+      const orderDesign =
+        await this.prisma.orderDesign.create({
+          data: {
+            userId: user.sub,
+            address: order.address.nameAddress,
+            detail: JSON.stringify(order.detail),
+            status: 'IN_PROGRESS',
+            material: order.material.name,
+            total: order.total,
+          },
+        });
+
+      if (!orderDesign) {
+        throw new Error(
+          'orderDesign create failed',
+        );
+      }
+      return orderDesign;
+    } catch (error) {
+      console.error(error.message)
+      throw new InternalServerErrorException(
+        error.message,
+      );
     }
   }
 

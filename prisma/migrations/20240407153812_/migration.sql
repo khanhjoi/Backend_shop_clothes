@@ -104,6 +104,20 @@ CREATE TABLE "Order" (
 );
 
 -- CreateTable
+CREATE TABLE "OrderDesign" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "address" TEXT NOT NULL,
+    "metarial" TEXT NOT NULL,
+    "status" "Status" NOT NULL,
+    "detail" JSONB NOT NULL,
+    "logo" TEXT,
+    "total" DECIMAL(65,30),
+
+    CONSTRAINT "OrderDesign_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "OrderDetail" (
     "orderId" INTEGER NOT NULL,
     "quantity" INTEGER NOT NULL,
@@ -149,6 +163,15 @@ CREATE TABLE "Rating" (
     "userId" INTEGER,
 
     CONSTRAINT "Rating_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Material" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+
+    CONSTRAINT "Material_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -226,6 +249,9 @@ ALTER TABLE "ShoppingCartProduct" ADD CONSTRAINT "ShoppingCartProduct_shoppingCa
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrderDesign" ADD CONSTRAINT "OrderDesign_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "OrderDetail" ADD CONSTRAINT "OrderDetail_productOptionsProductId_productOptionsSizeId_p_fkey" FOREIGN KEY ("productOptionsProductId", "productOptionsSizeId", "productOptionsColorId") REFERENCES "ProductOptions"("productId", "sizeId", "colorId") ON DELETE RESTRICT ON UPDATE CASCADE;

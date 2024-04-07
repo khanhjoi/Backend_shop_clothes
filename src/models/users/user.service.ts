@@ -421,8 +421,12 @@ export class UserService {
           },
         );
 
-      if (option.quantity <= 0) {
+      if (option.quantity <= 0 ) {
         throw new Error('Sản phẩm đã hết hàng!!');
+      }
+
+      if(option.quantity < productCart.quantity) {
+        throw new Error('Sản phẩm không còn đủ hàng!!');
       }
 
       const cartDetail =

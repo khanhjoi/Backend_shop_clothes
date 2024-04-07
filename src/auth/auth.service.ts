@@ -84,6 +84,8 @@ export class AuthService {
 
   async signinLocal(dto: AuthDtoSignIn) {
     // find user
+    console.log(dto);
+
     const user = await this.user.findOne(
       dto.email,
     );

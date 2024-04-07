@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { categories } from './data/categories';
 import { sizes } from './data/sizes';
 import { shops } from './data/shops';
+import { materials } from './data/material';
 const prisma = new PrismaClient();
 
 async function addCategories() {
@@ -22,23 +23,44 @@ async function addShops() {
   });
 }
 
-addSizes().catch((e) => {
-  console.error(e);
-  process.exit(1);
-}).finally(async() => {
-  await prisma.$disconnect();
-})
+async function addMaterials() {
+  await prisma.material.createMany({
+    data: materials,
+  });
+}
 
-addShops().catch((e) => {
-  console.error(e);
-  process.exit(1);
-}).finally(async() => {
-  await prisma.$disconnect();
-})
+addSizes()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
 
-addCategories().catch((e) => {
-  console.error(e);
-  process.exit(1);
-}).finally(async() => {
-  await prisma.$disconnect();
-})
+addMaterials()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
+addShops()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
+addCategories()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

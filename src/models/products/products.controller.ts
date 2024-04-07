@@ -16,6 +16,7 @@ import {
   Prisma,
   Product,
   Rating,
+  Size,
   User,
 } from '@prisma/client';
 import { PaginatedResult } from 'common/decorators/Pagination';
@@ -53,7 +54,13 @@ export class ProductController {
       page,
     });
   }
-  
+
+  @Get('/sizes')
+  @HttpCode(HttpStatus.OK)
+  async getSizes(): Promise<Size[]> {
+    return this.productSV.getSize();
+  }
+
   @Get('/discount')
   @HttpCode(HttpStatus.OK)
   async getProductsDiscount() {
@@ -63,7 +70,7 @@ export class ProductController {
   @UseGuards(JwtGuard)
   @Put('/admin')
   async updateProductAdmin() {}
-  
+
   @UseGuards(JwtGuard)
   @Put('/delete')
   async deleteProductAdmin() {}

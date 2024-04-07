@@ -11,6 +11,8 @@ import { ImageModule } from 'models/image/image.module';
 import { OrderModule } from 'models/orders/orderes.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { DiscountModule } from 'models/discount/Discount.module';
+import { AIModule } from 'AIService/AI.module';
+import { MaterialModule } from 'models/material/Material.module';
 
 @Module({
   imports: [
@@ -20,14 +22,15 @@ import { DiscountModule } from 'models/discount/Discount.module';
     ReceiptModule,
     CategoryModule,
     ImageModule,
+    MaterialModule,
+    AIModule,
     ProductsModule,
     OrderModule,
     PrismaModule,
     DiscountModule,
     ConfigModule.forRoot({ isGlobal: true }),
     CloudinaryModule,
- 
   ],
-  exports: [AppModule]
+  exports: [AppModule],
 })
 export class AppModule {}
