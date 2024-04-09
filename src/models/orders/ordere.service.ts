@@ -61,6 +61,37 @@ export class OrderService {
     }
   }
 
+  async getOrdersDesign(
+    user: any,
+  ): Promise<OrderDesign[]> {
+    try {
+      const order =
+        await this.prisma.orderDesign.findMany({
+          where: {
+            userId: user.sub,
+          },
+          include: {
+            user: {
+              select: {
+                email: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+              },
+            },
+          },
+        });
+      if (!order)
+        throw new NotFoundError(
+          `Order not found`,
+        );
+
+      return order;
+    } catch (error) {
+      throw new ExceptionsHandler(error);
+    }
+  }
+
   async getOrder(user: any) {
     try {
     } catch (error) {}
@@ -184,14 +215,16 @@ export class OrderService {
     order: any,
   ): Promise<OrderDesign> {
     try {
-      console.log();
       const orderDesign =
         await this.prisma.orderDesign.create({
           data: {
             userId: user.sub,
             address: order.address.nameAddress,
             detail: JSON.stringify(order.detail),
+            colorCode: order.colorCode,
             status: 'IN_PROGRESS',
+            logo: order.logo,
+            image: order.image,
             material: order.material.name,
             total: order.total,
           },
@@ -204,7 +237,7 @@ export class OrderService {
       }
       return orderDesign;
     } catch (error) {
-      console.error(error.message)
+      console.error(error.message);
       throw new InternalServerErrorException(
         error.message,
       );
@@ -318,6 +351,42 @@ export class OrderService {
   }
 
   // admin
+
+  async getOrderDesignAdmin(
+    user: UserToken,
+  ): Promise<OrderDesign[]> {
+    try {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
+        throw new ForbiddenException(); // Throwing ForbiddenException for non-admin users
+      }
+
+      const orders =
+        await this.prisma.orderDesign.findMany({
+          include: {
+            user: {
+              select: {
+                email: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+              },
+            },
+          },
+        });
+      if (!orders)
+        throw new Error(
+          'orders must be specified',
+        );
+      return orders;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
 
   async getOrdersAdmin(
     user: UserToken,
@@ -466,6 +535,79 @@ export class OrderService {
             },
           );
         }
+      }
+
+      return update;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
+  async updateOrderDesignAdmin(
+    user: UserToken,
+    updateStatus: UpdateStatusReq,
+  ): Promise<OrderDesign> {
+    try {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
+        throw new Error(
+          'Người dùng không có quyền truy cập',
+        );
+      }
+      console.log(updateStatus);
+      const order =
+        await this.prisma.orderDesign.findUnique({
+          where: {
+            id: updateStatus.order.orderId,
+          },
+        });
+
+      if (!order)
+        throw new Error(
+          'Đơn hàng không tồn tại!',
+        );
+
+      if (
+        order.status === 'IS_SUCCESS' ||
+        order.status === 'IS_CANCELLED' ||
+        order.status === 'DELIVERED' ||
+        order.status === 'RETURNED' ||
+        order.status === 'REFUNDED'
+      ) {
+        throw new Error(
+          'Đơn hàng đã kết thúc không thể thay đổi trạng thái!',
+        );
+      }
+      let update: any;
+      if (updateStatus?.order?.total >= 0) {
+        update =
+          await this.prisma.orderDesign.update({
+            where: {
+              id: updateStatus.order.orderId,
+            },
+            data: {
+              status: updateStatus?.order?.status,
+              total:
+                updateStatus?.order?.total >= 0
+                  ? updateStatus?.order?.total
+                  : 0,
+            },
+          });
+      } else {
+        update =
+          await this.prisma.orderDesign.update({
+            where: {
+              id: updateStatus.order.orderId,
+            },
+            data: {
+              status: updateStatus?.order?.status,
+           
+            },
+          });
       }
 
       return update;

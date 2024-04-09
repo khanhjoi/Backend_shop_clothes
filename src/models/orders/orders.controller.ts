@@ -19,7 +19,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { OrderService } from './ordere.service';
-import { Order } from '@prisma/client';
+import {
+  Order,
+  OrderDesign,
+} from '@prisma/client';
 import { UserToken } from 'models/users/dto/UserTokenDto';
 import {
   NextFunction,
@@ -66,6 +69,16 @@ export class OrderController {
   }
 
   @UseGuards(JwtGuard)
+  @Get('/user/orders/design')
+  async getOrderDesign(
+    @GetUser() user: any,
+  ): Promise<OrderDesign[]> {
+    return this.orderService.getOrdersDesign(
+      user,
+    );
+  }
+
+  @UseGuards(JwtGuard)
   @Post('/user/order')
   async createOrder(
     @GetUser() user: any,
@@ -88,7 +101,6 @@ export class OrderController {
       order,
     );
   }
-
 
   @UseGuards(JwtGuard)
   @Post('/user/order/VnPay')
@@ -227,9 +239,18 @@ export class OrderController {
   @Get('/admin/orders')
   async getOrdersAdmin(
     @GetUser() user: any,
-    @Body() order: any,
   ): Promise<any> {
     return this.orderService.getOrdersAdmin(user);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('/admin/orders/design')
+  async getOrdersDesignAdmin(
+    @GetUser() user: any,
+  ): Promise<any> {
+    return this.orderService.getOrderDesignAdmin(
+      user,
+    );
   }
 
   @UseGuards(JwtGuard)
@@ -239,6 +260,18 @@ export class OrderController {
     @Body() order: any,
   ): Promise<Order> {
     return this.orderService.updateOrderAdmin(
+      user,
+      order,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Put('/admin/orders/design')
+  async updateOrderDesignAdmin(
+    @GetUser() user: any,
+    @Body() order: any,
+  ): Promise<OrderDesign> {
+    return this.orderService.updateOrderDesignAdmin(
       user,
       order,
     );

@@ -22,6 +22,8 @@ enum Status {
   DELIVERED
   RETURNED
   REFUNDED
+  IN_ACCEPTE
+  ACCEPTED
   // Add more status options as needed
 }
 
@@ -126,15 +128,17 @@ model Order {
 }
 
 model OrderDesign {
-  id      Int    @id @default(autoincrement())
-  userId  Int
-  address String
-  material String
-  status   Status
-  detail   Json
-  logo     String?
-  total    Decimal?
-  user     User     @relation(fields: [userId], references: [id])
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  address   String
+  material  String
+  colorCode String
+  status    Status
+  detail    Json
+  logo      String?
+  image      String?
+  total     Decimal?
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model OrderDetail {

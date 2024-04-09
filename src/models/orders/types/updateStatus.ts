@@ -5,4 +5,5 @@ export type UpdateStatusReq = {
 type order = {
   orderId: number;
   status: any;
+  total?: number;
 };

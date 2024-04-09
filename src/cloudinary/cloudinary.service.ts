@@ -3,22 +3,28 @@
 import { Injectable } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryResponse } from './cloudinary/cloudinary-response';
-
+import * as fs from 'fs';
 const streamifier = require('streamifier');
 
 @Injectable()
 export class CloudinaryService {
-  uploadFile(file: Express.Multer.File): Promise<CloudinaryResponse> {
-    return new Promise<CloudinaryResponse>((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        (error, result) => {
-          if (error) return reject(error);
-    
-          resolve(result);
-        },
-      );
+  uploadFile(
+    file: Express.Multer.File,
+  ): Promise<CloudinaryResponse> {
+    return new Promise<CloudinaryResponse>(
+      (resolve, reject) => {
+        const uploadStream =
+          cloudinary.uploader.upload_stream(
+            (error, result) => {
+              if (error) return reject(error);
 
-      streamifier.createReadStream(file.buffer).pipe(uploadStream);
-    });
+              resolve(result);
+            },
+          );
+        streamifier
+          .createReadStream(file.buffer)
+          .pipe(uploadStream);
+      },
+    );
   }
 }

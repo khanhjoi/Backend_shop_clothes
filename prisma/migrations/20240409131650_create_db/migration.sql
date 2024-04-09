@@ -2,7 +2,7 @@
 CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN', 'STAFF', 'CUSTOMER');
 
 -- CreateEnum
-CREATE TYPE "Status" AS ENUM ('IN_PROGRESS', 'IS_PENDING', 'IS_SUCCESS', 'IS_CANCELLED', 'DELIVERED', 'RETURNED', 'REFUNDED');
+CREATE TYPE "Status" AS ENUM ('IN_PROGRESS', 'IS_PENDING', 'IS_SUCCESS', 'IS_CANCELLED', 'DELIVERED', 'RETURNED', 'REFUNDED', 'IN_ACCEPTE', 'ACCEPTED');
 
 -- CreateEnum
 CREATE TYPE "Payment" AS ENUM ('UPON_RECEIPT', 'VNPAYMENT', 'MOMOPAYMENT');
@@ -108,10 +108,12 @@ CREATE TABLE "OrderDesign" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "address" TEXT NOT NULL,
-    "metarial" TEXT NOT NULL,
+    "material" TEXT NOT NULL,
+    "colorCode" TEXT NOT NULL,
     "status" "Status" NOT NULL,
     "detail" JSONB NOT NULL,
     "logo" TEXT,
+    "image" TEXT,
     "total" DECIMAL(65,30),
 
     CONSTRAINT "OrderDesign_pkey" PRIMARY KEY ("id")
