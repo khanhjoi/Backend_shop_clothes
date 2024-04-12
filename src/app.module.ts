@@ -14,6 +14,9 @@ import { DiscountModule } from 'models/discount/Discount.module';
 import { AIModule } from 'AIService/AI.module';
 import { MaterialModule } from 'models/material/Material.module';
 
+import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
+import { MailModule } from 'mail/mail.module';
+
 @Module({
   imports: [
     AuthModule,
@@ -28,6 +31,7 @@ import { MaterialModule } from 'models/material/Material.module';
     OrderModule,
     PrismaModule,
     DiscountModule,
+    MailModule,
     ConfigModule.forRoot({ isGlobal: true }),
     CloudinaryModule,
   ],
