@@ -15,10 +15,15 @@ import { PrismaService } from '@prisma/prisma.service';
 import { UserToken } from 'models/users/dto/UserTokenDto';
 import { NotFoundError } from 'rxjs';
 import { UpdateStatusReq } from './types/updateStatus';
+import { MailService } from 'mail/mail.service';
+import { SendEmailDto } from 'mail/dto/mail.dto';
 
 @Injectable()
 export class OrderService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mail: MailService,
+  ) {}
 
   async getOrders(user: any): Promise<Order[]> {
     try {
@@ -103,24 +108,19 @@ export class OrderService {
     orderId: string,
   ): Promise<Order> {
     try {
-      let id: number;
-      if (typeof orderStatus === 'string') {
-        id = parseInt(orderId, 10);
-      }
-
       const order =
         await this.prisma.order.findFirst({
           where: {
-            id: id,
+            id: Number(orderId),
           },
         });
 
-      if (order.userId !== user.sub)
+      console.log(order.userId, user.sub);
+
+      if (order?.userId !== user.sub)
         throw new Error(
           'Người dùng không phải chủ đơn hàng',
         );
-
-      console.log(orderStatus);
 
       const updateOrder =
         await this.prisma.order.update({
@@ -170,6 +170,43 @@ export class OrderService {
           );
         }
       }
+
+      return updateOrder;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
+  async updateOrderDesignUser(
+    user: UserToken,
+    orderStatus: any,
+    orderId: string,
+  ): Promise<OrderDesign> {
+    try {
+      const order =
+        await this.prisma.orderDesign.findFirst({
+          where: {
+            id: Number(orderId),
+          },
+        });
+
+      console.log(order.userId)
+      if (order?.userId !== user.sub)
+        throw new Error(
+          'Người dùng không phải chủ đơn hàng',
+        );
+
+      const updateOrder =
+        await this.prisma.orderDesign.update({
+          where: {
+            id: order.id,
+          },
+          data: {
+            status: orderStatus.orderStatus,
+          },
+        });
 
       return updateOrder;
     } catch (error) {
@@ -551,14 +588,13 @@ export class OrderService {
   ): Promise<OrderDesign> {
     try {
       if (
-        user.role !== 'ADMIN' &&
-        user.role !== 'STAFF'
+        !['ADMIN', 'STAFF'].includes(user.role)
       ) {
         throw new Error(
           'Người dùng không có quyền truy cập',
         );
       }
-      console.log(updateStatus);
+
       const order =
         await this.prisma.orderDesign.findUnique({
           where: {
@@ -566,48 +602,122 @@ export class OrderService {
           },
         });
 
-      if (!order)
+      if (!order) {
         throw new Error(
           'Đơn hàng không tồn tại!',
         );
+      }
 
+      const terminalStatuses = [
+        'IS_SUCCESS',
+        'IS_CANCELLED',
+        'DELIVERED',
+        'RETURNED',
+        'REFUNDED',
+      ];
       if (
-        order.status === 'IS_SUCCESS' ||
-        order.status === 'IS_CANCELLED' ||
-        order.status === 'DELIVERED' ||
-        order.status === 'RETURNED' ||
-        order.status === 'REFUNDED'
+        terminalStatuses.includes(order.status)
       ) {
         throw new Error(
           'Đơn hàng đã kết thúc không thể thay đổi trạng thái!',
         );
       }
-      let update: any;
-      if (updateStatus?.order?.total >= 0) {
-        update =
-          await this.prisma.orderDesign.update({
-            where: {
-              id: updateStatus.order.orderId,
-            },
-            data: {
-              status: updateStatus?.order?.status,
-              total:
-                updateStatus?.order?.total >= 0
-                  ? updateStatus?.order?.total
-                  : 0,
-            },
-          });
+
+      const userDB =
+        await this.prisma.user.findUnique({
+          where: {
+            id: order.userId,
+          },
+        });
+
+      if (!userDB) {
+        throw new Error(
+          'Người dùng không tồn tại',
+        );
+      }
+
+      let dataToUpdate: any = {
+        status: updateStatus.order.status,
+      };
+
+      if (updateStatus.order.total >= 0) {
+        dataToUpdate.total =
+          updateStatus.order.total;
       } else {
-        update =
-          await this.prisma.orderDesign.update({
-            where: {
-              id: updateStatus.order.orderId,
+        dataToUpdate.total = 0;
+      }
+
+      const update =
+        await this.prisma.orderDesign.update({
+          where: {
+            id: updateStatus.order.orderId,
+          },
+          data: dataToUpdate,
+        });
+
+      if (update.status === 'IN_ACCEPT') {
+        const dto: SendEmailDto = {
+          from: {
+            name: 'CMS',
+            address: 'CMS@gmail.com',
+          },
+          recipients: [
+            {
+              name: `${userDB.firstName} ${userDB.lastName}`,
+              address: userDB.email,
             },
-            data: {
-              status: updateStatus?.order?.status,
-           
-            },
-          });
+          ],
+          subject:
+            'Hãy xác nhận đơn hàng của bạn!!!',
+          html: `
+          <div
+          style="
+            width: 40%;
+            height: 30rem;
+            margin: 10px auto;
+            border-radius: 4px;
+            box-shadow: 1px 2px 4px rgb(0, 0, 0, 0.2);
+          "
+        >
+          <h1
+            style="
+              padding-top: 10px;
+              width: full;
+              text-align: center;
+              font-size: 2rem;
+            "
+          >
+            Xác nhận đơn hàng của bạn
+          </h1>
+    
+          <img
+            src="https://t3.ftcdn.net/jpg/04/60/79/46/360_F_460794612_JXF0OGQ84Y49kDCj4Sz3tfdnKNrKNj9A.jpg"
+            alt=""
+            srcset=""
+            style="
+              display: block;
+              width: 80%;
+              margin: 0 auto;
+              margin-top: 10px;
+            "
+          />
+          <p
+            style="text-align: center;"
+          >
+            Xin chào người dùng
+            <span style="font-weight: bold">
+              ${userDB.firstName} ${userDB.lastName}</span
+            >
+            đơn hàng của bạn đã được xác nhận và thành
+            tiền vui lòng truy cập
+            <a href="http://localhost:5173/profile"
+              >Đơn hàng</a
+            >
+            để xác nhận đơn hàng
+          </p>
+        </div>`,
+        };
+        this.mail.sendMail(dto);
       }
 
       return update;

@@ -22,7 +22,7 @@ enum Status {
   DELIVERED
   RETURNED
   REFUNDED
-  IN_ACCEPTE
+  IN_ACCEPT
   ACCEPTED
   // Add more status options as needed
 }
@@ -117,12 +117,15 @@ model ShoppingCartProduct {
 }
 
 model Order {
-  id          Int           @id @default(autoincrement())
-  userId      Int
-  address     String
-  status      Status
-  payment     Payment       @default(UPON_RECEIPT)
-  total       Decimal
+  id      Int      @id @default(autoincrement())
+  userId  Int
+  address String
+  status  Status
+  payment Payment  @default(UPON_RECEIPT)
+  total   Decimal
+    createdAt DateTime @default(now())
+
+
   user        User          @relation(fields: [userId], references: [id])
   OrderDetail OrderDetail[]
 }
@@ -136,8 +139,9 @@ model OrderDesign {
   status    Status
   detail    Json
   logo      String?
-  image      String?
+  image     String?
   total     Decimal?
+  createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
 }
 

@@ -61,6 +61,20 @@ export class OrderController {
   }
 
   @UseGuards(JwtGuard)
+  @Put('/user/orders-design/:id')
+  async updateOrderDesignUser(
+    @GetUser() user: any,
+    @Body() orderStatus: any,
+    @Param('id') id: string,
+  ): Promise<OrderDesign> {
+    return this.orderService.updateOrderDesignUser(
+      user,
+      orderStatus,
+      id,
+    );
+  }
+
+  @UseGuards(JwtGuard)
   @Get('/user/orders')
   async getAllOrder(
     @GetUser() user: any,

@@ -13,9 +13,9 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { DiscountModule } from 'models/discount/Discount.module';
 import { AIModule } from 'AIService/AI.module';
 import { MaterialModule } from 'models/material/Material.module';
-
 import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { MailModule } from 'mail/mail.module';
+import { StatisticalModule } from 'models/statistical/statistical.module';
 
 @Module({
   imports: [
@@ -34,6 +34,7 @@ import { MailModule } from 'mail/mail.module';
     MailModule,
     ConfigModule.forRoot({ isGlobal: true }),
     CloudinaryModule,
+    StatisticalModule,
   ],
   exports: [AppModule],
 })
