@@ -68,12 +68,26 @@ export class ProductController {
   }
 
   @UseGuards(JwtGuard)
-  @Put('/admin')
-  async updateProductAdmin() {}
+  @Put('/:id/admin')
+  async updateProductAdmin(
+    @Body() product: Product,
+    @Param('id') id: number,
+  ): Promise<Product> {
+    return this.productSV.updateProduct(
+      Number(id),
+      product,
+    ); 
+  }
 
   @UseGuards(JwtGuard)
-  @Put('/delete')
-  async deleteProductAdmin() {}
+  @Delete('/:id/admin')
+  async deleteProductAdmin(
+    @Param('id') id: number,
+  ) {
+    return this.productSV.deleteProduct(
+      Number(id),
+    );
+  }
 
   @Get('/:id')
   async getProduct(

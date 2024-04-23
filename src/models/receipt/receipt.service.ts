@@ -77,13 +77,12 @@ export class ReceiptService {
       for (const product of receiptDto.receiptDetail) {
         await this.createProduct(product);
       }
-
       // Create receipt
       await this.createReceiptHelp(receiptDto);
 
-
       return 'success';
     } catch (error) {
+      console.log(error);
       throw new ExceptionsHandler(error);
     }
   }
@@ -163,14 +162,11 @@ export class ReceiptService {
           },
         });
 
-
       if (!product) {
-
         await this.createProductIfNotExists(
           detailProduct,
         );
       } else {
-
         await this.updateProductIfExists(
           detailProduct.options,
           product.id,
@@ -271,6 +267,7 @@ export class ReceiptService {
           );
         }
       }
+      console.log('3');
     } catch (error) {
       throw new ExceptionsHandler(error);
     }
@@ -301,6 +298,7 @@ export class ReceiptService {
         await this.prisma.color.findFirst({
           where: {
             color: option.color,
+            codeColor: option.codeColor,
           },
         });
 
@@ -327,9 +325,7 @@ export class ReceiptService {
     product: Product,
   ) {
     try {
-
       for (const optionArr of options) {
-
         const color =
           await this.isColorExist(optionArr);
 
@@ -337,7 +333,6 @@ export class ReceiptService {
           throw new NotFoundException(
             'color not found',
           );
-       
 
         for (const size of optionArr.sizeId) {
           const option =

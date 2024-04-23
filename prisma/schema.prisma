@@ -117,14 +117,13 @@ model ShoppingCartProduct {
 }
 
 model Order {
-  id      Int      @id @default(autoincrement())
-  userId  Int
-  address String
-  status  Status
-  payment Payment  @default(UPON_RECEIPT)
-  total   Decimal
-    createdAt DateTime @default(now())
-
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  address   String
+  status    Status
+  payment   Payment  @default(UPON_RECEIPT)
+  total     Decimal
+  createdAt DateTime @default(now())
 
   user        User          @relation(fields: [userId], references: [id])
   OrderDetail OrderDetail[]
@@ -160,21 +159,21 @@ model OrderDetail {
 
 //  Definde order Product schema
 model Product {
-  id             Int      @id @default(autoincrement())
+  id             Int              @id @default(autoincrement())
   name           String
   mainImage      String
   description    String
   subDescription String
   price          Decimal
+  isDelete       Boolean @default(false)
   rating         Rating[]
-
-  options ProductOptions[]
+  options        ProductOptions[]
 
   categoryId Int?
   Category   Category? @relation(fields: [categoryId], references: [id])
   discountId Int?
   Discount   Discount? @relation(fields: [discountId], references: [id])
-}
+} 
 
 model ProductOptions {
   productId           Int

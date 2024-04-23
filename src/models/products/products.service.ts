@@ -72,6 +72,7 @@ export class ProductService {
     let whereFilter: any = {
       price: filter.price,
       name: filter.name,
+      isDelete: false,
     };
 
     if (
@@ -133,6 +134,54 @@ export class ProductService {
     return product;
   }
 
+  async updateProduct(
+    id: number,
+    product: Product,
+  ): Promise<Product> {
+    try {
+      const productRes =
+        await this.prisma.product.update({
+          where: {
+            id: id,
+          },
+          data: {
+            name: product.name,
+            price: product.price,
+            description: product.description,
+            subDescription:
+              product.subDescription,
+          },
+        });
+      return productRes;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
+  async deleteProduct(id: number) {
+    try {
+      // Find all associated product options based on product ID
+      const product =
+        await  this.prisma.product.update({
+          where: {
+            id: id,
+          },
+          data: {
+            isDelete: true,
+          },
+        });
+
+      return product;
+    } catch (error) {
+      console.error(
+        'Error deleting product:',
+        error,
+      );
+      throw error;
+    }
+  }
   async commentProduct(
     productId: number,
     user: any,
@@ -290,7 +339,10 @@ export class ProductService {
     user: UserToken,
   ): Promise<Product[]> {
     try {
-      if (user.role !== 'ADMIN' && user.role !== "STAFF") {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
         throw new Error(
           'you do not have permission to access this',
         );
@@ -298,6 +350,9 @@ export class ProductService {
 
       const products =
         await this.prisma.product.findMany({
+          where: {
+            isDelete: false,
+          },
           include: {
             Discount: true,
             options: {
@@ -340,12 +395,15 @@ export class ProductService {
     }
   }
 
-  async getSize():Promise<Size[]> {
+  async getSize(): Promise<Size[]> {
     try {
-      const sizes = await this.prisma.size.findMany();
+      const sizes =
+        await this.prisma.size.findMany();
       return sizes;
     } catch (error) {
-      throw new InternalServerErrorException(error.message)
+      throw new InternalServerErrorException(
+        error.message,
+      );
     }
   }
 }

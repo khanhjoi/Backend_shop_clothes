@@ -289,7 +289,7 @@ export class StatisticalService {
 
       return {
         items: itemsOutOfStock,
-        quantity: quantityOutOfStock
+        quantity: quantityOutOfStock,
       };
     } catch (error) {
       throw new InternalServerErrorException(

@@ -141,6 +141,7 @@ CREATE TABLE "Product" (
     "description" TEXT NOT NULL,
     "subDescription" TEXT NOT NULL,
     "price" DECIMAL(65,30) NOT NULL,
+    "isDelete" BOOLEAN NOT NULL DEFAULT false,
     "categoryId" INTEGER,
     "discountId" INTEGER,
 
