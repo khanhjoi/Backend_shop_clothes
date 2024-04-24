@@ -91,16 +91,79 @@ export class StatisticalService {
         if (order?.status !== 'IS_CANCELLED') {
           sum += Number(order?.total);
         }
-        if (order?.status !== 'IS_CANCELLED') {
+        if (order?.status === 'IS_CANCELLED') {
           monthlyCountsCancel[month]++;
         }
 
-        monthlyCounts[month]++;
+        if (order?.status !== 'IS_CANCELLED') {
+          monthlyCounts[month]++;
+        }
       });
 
       return {
         dataModel: monthlyCounts,
         dataModelCancel: monthlyCountsCancel,
+        total: sum,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
+  async getStatisticOrderSelling(
+    user: UserToken,
+  ): Promise<any> {
+    try {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
+        throw new Error(
+          'Người dùng không có quyền',
+        );
+      }
+
+      const orders: Order[] =
+        await this.prisma.order.findMany({
+          include: {
+            OrderDetail: {
+              select: {
+                dateAdd: true,
+              },
+            },
+          },
+        });
+
+      // Initialize an array to hold counts for each month
+      const monthlyCounts: number[] = new Array(
+        12,
+      ).fill(0);
+
+      const monthlyCountsCancel: number[] =
+        new Array(12).fill(0);
+
+      let sum: number = 0;
+
+      // Count orders for each month
+      orders.forEach((order: any) => {
+        const month = new Date(
+          order?.createdAt,
+        ).getMonth();
+
+        if (order?.status !== 'IS_CANCELLED') {
+          sum += Number(order?.total);
+        }
+        if (order?.status !== 'IS_CANCELLED') {
+          monthlyCounts[month] += Number(
+            order?.total,
+          );
+        }
+      });
+
+      return {
+        dataModel: monthlyCounts,
         total: sum,
       };
     } catch (error) {
@@ -154,16 +217,71 @@ export class StatisticalService {
         if (order?.status !== 'IS_CANCELLED') {
           sum += Number(order?.total);
         }
-        if (order?.status !== 'IS_CANCELLED') {
+        if (order?.status === 'IS_CANCELLED') {
           monthlyCountsCancel[month]++;
         }
 
-        monthlyCounts[month]++;
+        if (order?.status !== 'IS_CANCELLED') {
+          monthlyCounts[month]++;
+        }
       });
 
       return {
         dataModel: monthlyCounts,
         dataModelCancel: monthlyCountsCancel,
+        total: sum,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
+  async getStatisticOrderDesignSelling(
+    user: UserToken,
+  ): Promise<any> {
+    try {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
+        throw new Error(
+          'Người dùng không có quyền',
+        );
+      }
+
+      const orders: OrderDesign[] =
+        await this.prisma.orderDesign.findMany(
+          {},
+        );
+
+      // Initialize an array to hold counts for each month
+      const monthlyCounts: number[] = new Array(
+        12,
+      ).fill(0);
+      const monthlyCountsCancel: number[] =
+        new Array(12).fill(0);
+
+      let sum: number = 0;
+
+      // Count orders for each month
+      orders.forEach((order: any) => {
+        const month = new Date(
+          order?.createdAt,
+        ).getMonth();
+
+        if (order?.status !== 'IS_CANCELLED') {
+          sum += Number(order?.total);
+        }
+     
+        if (order?.status !== 'IS_CANCELLED') {
+          monthlyCounts[month] += Number(order?.total);
+        }
+      });
+
+      return {
+        dataModel: monthlyCounts,
         total: sum,
       };
     } catch (error) {
@@ -202,7 +320,7 @@ export class StatisticalService {
               quantity: 'desc',
             },
           },
-          take: 10, // Limit the result to the top 10
+          take: 5, // Limit the result to the top 10
         });
 
       let quantityTopSelling: any = [];
@@ -275,6 +393,7 @@ export class StatisticalService {
               Color: true,
               Size: true,
             },
+            take: 5,
           },
         );
 

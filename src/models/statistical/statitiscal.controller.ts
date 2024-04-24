@@ -31,7 +31,9 @@ export class StatisticalController {
   @UseGuards(JwtGuard)
   @Get('/topSelling')
   @HttpCode(HttpStatus.OK)
-  getTopSellingProducts(@GetUser() user: UserToken) {
+  getTopSellingProducts(
+    @GetUser() user: UserToken,
+  ) {
     return this.statisticalService.getTopSellingProducts(
       user,
     );
@@ -40,7 +42,9 @@ export class StatisticalController {
   @UseGuards(JwtGuard)
   @Get('/outOfStock')
   @HttpCode(HttpStatus.OK)
-  getOutOfStockProducts(@GetUser() user: UserToken) {
+  getOutOfStockProducts(
+    @GetUser() user: UserToken,
+  ) {
     return this.statisticalService.getOutOfStockProducts(
       user,
     );
@@ -60,6 +64,17 @@ export class StatisticalController {
   }
 
   @UseGuards(JwtGuard)
+  @Get('/orders/selling')
+  @HttpCode(HttpStatus.OK)
+  getStatisticalOrderSelling(
+    @GetUser() user: UserToken,
+  ) {
+    return this.statisticalService.getStatisticOrderSelling(
+      user,
+    );
+  }
+
+  @UseGuards(JwtGuard)
   @Get('/orders-design')
   @HttpCode(HttpStatus.OK)
   getStatisticalOrderDesign(
@@ -69,6 +84,19 @@ export class StatisticalController {
     return this.statisticalService.getStatisticOrderDesign(
       user,
       params,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('/orders-design/selling')
+  @HttpCode(HttpStatus.OK)
+  getStatisticalOrderDesignSelling(
+    @GetUser() user: UserToken,
+    @Query() params: any,
+  ) {
+    return this.statisticalService.getStatisticOrderDesignSelling(
+      user,
+
     );
   }
 }
