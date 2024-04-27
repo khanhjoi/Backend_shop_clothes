@@ -32,6 +32,18 @@ export class AuthService {
         dto.password,
       );
 
+      const checkUser =
+        await this.prisma.user.findFirst({
+          where: {
+            email: dto.email,
+            isDeleted: false,
+          },
+        });
+
+      if (checkUser) {
+        throw new Error('Người dùng đã tồn tại');
+      }
+
       // Store new user in db
       const newUser =
         await this.prisma.user.create({
@@ -69,30 +81,27 @@ export class AuthService {
 
       return token;
     } catch (error) {
-      if (
-        error instanceof
-        PrismaClientKnownRequestError
-      ) {
-        if (error.code === 'P2002') {
-          throw new ForbiddenException(
-            'Creadetials taken',
-          );
-        }
-      }
+      throw new InternalServerErrorException(
+        error.message,
+      );
     }
   }
 
   async signinLocal(dto: AuthDtoSignIn) {
     // find user
-    console.log(dto);
-
-    const user = await this.user.findOne(
-      dto.email,
+    const user = await this.prisma.user.findFirst(
+      {
+        where: {
+          email: dto.email,
+          isDeleted: false,
+        },
+      },
     );
+    
     // throw error if user not exit
     if (!user)
       throw new ForbiddenException(
-        'Credentials incorrect',
+        'Thông tin nhập không chính xác!',
       );
 
     const token = await this.signToken(

@@ -96,7 +96,6 @@ export class StatisticalController {
   ) {
     return this.statisticalService.getStatisticOrderDesignSelling(
       user,
-
     );
   }
 }

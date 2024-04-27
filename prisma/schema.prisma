@@ -42,9 +42,10 @@ model User {
   rating    Rating[]
 
   createdAt DateTime @default(now())
+  isDeleted Boolean  @default(false)
   updatedAt DateTime @updatedAt
 
-  email          String        @unique
+  email          String        
   password       String
   firstName      String?
   lastName       String?
@@ -165,7 +166,7 @@ model Product {
   description    String
   subDescription String
   price          Decimal
-  isDelete       Boolean @default(false)
+  isDelete       Boolean          @default(false)
   rating         Rating[]
   options        ProductOptions[]
 
@@ -173,7 +174,7 @@ model Product {
   Category   Category? @relation(fields: [categoryId], references: [id])
   discountId Int?
   Discount   Discount? @relation(fields: [discountId], references: [id])
-} 
+}
 
 model ProductOptions {
   productId           Int

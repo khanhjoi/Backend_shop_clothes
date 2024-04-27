@@ -23,6 +23,7 @@ import {
 } from 'common/decorators/Pagination';
 import { CommentDto } from './dto/CommentDto';
 import { UserToken } from 'models/users/dto/UserTokenDto';
+import { response } from 'express';
 
 const paginate: PaginateFunction = paginator({
   perPage: 6,
@@ -164,7 +165,7 @@ export class ProductService {
     try {
       // Find all associated product options based on product ID
       const product =
-        await  this.prisma.product.update({
+        await this.prisma.product.update({
           where: {
             id: id,
           },
@@ -182,6 +183,56 @@ export class ProductService {
       throw error;
     }
   }
+
+  async canRatingProduct(
+    productId: number,
+    user: any,
+  ): Promise<boolean> {
+    try {
+      const userDB =
+        await this.prisma.user.findUnique({
+          where: {
+            id: user.sub,
+          },
+        });
+
+      if (!userDB) {
+        throw new Error(
+          'Người dùng không tồn tại',
+        );
+      }
+
+      const orders: any =
+        await this.prisma.order.findMany({
+          where: {
+            userId: userDB.id,
+            status: 'IS_SUCCESS', // I assume this should be 'SUCCESS' instead of 'IS_SUCCESS'
+          },
+          include: {
+            OrderDetail: {
+              where: {
+                productOptionsProductId:
+                  productId,
+              },
+            },
+          },
+        });
+
+      for (const order of orders) {
+        if (order.OrderDetail.length > 0) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+
   async commentProduct(
     productId: number,
     user: any,

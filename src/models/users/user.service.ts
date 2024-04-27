@@ -38,6 +38,7 @@ export class UserService {
         await this.prisma.user.findMany({
           where: {
             id: { not: 0 },
+            isDeleted: false,
           },
           select: {
             email: true,
@@ -74,81 +75,16 @@ export class UserService {
 
       // Fetch user details including related entities
       const userToDelete =
-        await this.prisma.user.findUnique({
+        await this.prisma.user.update({
           where: {
             id: id,
           },
-          include: {
-            cart: true,
-            orders: true,
-            addresses: true,
-            rating: true,
+          data: {
+            isDeleted: true,
           },
         });
 
-      if (!userToDelete) {
-        throw new Error('User not found');
-      }
-
-      // Delete all related entities
-      if (userToDelete.cart) {
-        await this.prisma.shoppingCart.delete({
-          where: {
-            id: userToDelete.cart.id,
-          },
-        });
-      }
-
-      await Promise.all(
-        userToDelete.orders.map(async (order) => {
-          await this.prisma.orderDetail.deleteMany(
-            {
-              where: {
-                orderId: order.id,
-              },
-            },
-          );
-          await this.prisma.order.delete({
-            where: {
-              id: order.id,
-            },
-          });
-        }),
-      );
-
-      await Promise.all(
-        userToDelete.addresses.map(
-          async (address) => {
-            await this.prisma.address.delete({
-              where: {
-                id: address.id,
-              },
-            });
-          },
-        ),
-      );
-
-      await Promise.all(
-        userToDelete.rating.map(
-          async (rating) => {
-            await this.prisma.rating.delete({
-              where: {
-                id: rating.id,
-              },
-            });
-          },
-        ),
-      );
-
-      // Now, delete the user
-      const deletedUser =
-        await this.prisma.user.delete({
-          where: {
-            id: id,
-          },
-        });
-
-      return deletedUser;
+      return userToDelete;
     } catch (error) {
       throw new InternalServerErrorException(
         error.message,
@@ -340,7 +276,7 @@ export class UserService {
                     mainImage: true,
                     price: true,
                     id: true,
-                    Discount: true
+                    Discount: true,
                   },
                 },
                 Color: {
@@ -421,12 +357,16 @@ export class UserService {
           },
         );
 
-      if (option.quantity <=  0) {
+      if (option.quantity <= 0) {
         throw new Error('Sản phẩm đã hết hàng!!');
       }
 
-      if(option.quantity <= productCart.quantity) {
-        throw new Error('Sản phẩm không còn đủ hàng!!');
+      if (
+        option.quantity <= productCart.quantity
+      ) {
+        throw new Error(
+          'Sản phẩm không còn đủ hàng!!',
+        );
       }
 
       const cartDetail =

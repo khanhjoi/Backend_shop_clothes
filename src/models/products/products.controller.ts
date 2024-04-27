@@ -113,6 +113,18 @@ export class ProductController {
   }
 
   @UseGuards(JwtGuard)
+  @Get('/rating/:id')
+  async canRating(
+    @Param('id') id: string,
+    @GetUser() user: any,
+  ): Promise<boolean> {
+    return this.productSV.canRatingProduct(
+      Number(id),
+      user
+    );
+  }
+
+  @UseGuards(JwtGuard)
   @Put('/:id')
   async UpdateComment(
     @Param('id') id: string,
