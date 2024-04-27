@@ -16,6 +16,7 @@ import { UserToken } from 'models/users/dto/UserTokenDto';
 import { NotFoundError } from 'rxjs';
 import { UpdateStatusReq } from './types/updateStatus';
 import { MailService } from 'mail/mail.service';
+import moment from 'moment';
 import { SendEmailDto } from 'mail/dto/mail.dto';
 
 @Injectable()
@@ -115,7 +116,6 @@ export class OrderService {
           },
         });
 
-      console.log(order.userId, user.sub);
 
       if (order?.userId !== user.sub)
         throw new Error(
@@ -192,7 +192,7 @@ export class OrderService {
           },
         });
 
-      console.log(order.userId)
+
       if (order?.userId !== user.sub)
         throw new Error(
           'Người dùng không phải chủ đơn hàng',
@@ -242,7 +242,7 @@ export class OrderService {
       await this.removeCartDetail(user.sub);
       return createOrder;
     } catch (error) {
-      console.log(error);
+
       throw new ExceptionsHandler(error);
     }
   }
@@ -274,7 +274,7 @@ export class OrderService {
       }
       return orderDesign;
     } catch (error) {
-      console.error(error.message);
+
       throw new InternalServerErrorException(
         error.message,
       );
@@ -413,6 +413,39 @@ export class OrderService {
             },
           },
         });
+
+      for (const order of orders) {
+        if (order.status === 'IN_ACCEPT') {
+
+          const givenDate: any = new Date(
+            order.createdAt,
+          );
+
+          // Get the current date
+          const currentDate: any = new Date();
+
+          // Calculate the difference in milliseconds
+          const differenceInMilliseconds =
+            currentDate - givenDate;
+
+          // Convert milliseconds to days
+          const differenceInDays =
+            differenceInMilliseconds /
+            (1000 * 60 * 60 * 24);
+          // Check if the difference is greater than 2 days
+          if (differenceInDays > 7) {
+            await this.prisma.orderDesign.update({
+              where: {
+                id: order.id,
+              },
+              data: {
+                status: 'IS_CANCELLED',
+              },
+            });
+          } 
+        }
+        // Parse the given date string into a Date object
+      }
       if (!orders)
         throw new Error(
           'orders must be specified',
@@ -461,6 +494,7 @@ export class OrderService {
             },
           },
         });
+
       if (!orders)
         throw new Error(
           'orders must be specified',
@@ -673,7 +707,7 @@ export class OrderService {
           <div
           style="
             width: 40%;
-            height: 30rem;
+            height: 34rem;
             margin: 10px auto;
             border-radius: 4px;
             box-shadow: 1px 2px 4px rgb(0, 0, 0, 0.2);
@@ -713,8 +747,10 @@ export class OrderService {
             <a href="http://localhost:5173/profile"
               >Đơn hàng</a
             >
-            để xác nhận đơn hàng
+            để xác nhận đơn hàng. <br/>
+           Lưu ý: Vui lòng cập nhật đơn hàng của bạn đơn hàng sẽ hủy trong 7 ngày, nếu bạn không xác nhận,kể từ ngày gửi email này.
           </p>
+          
         </div>`,
         };
         this.mail.sendMail(dto);
