@@ -42,6 +42,86 @@ export class StatisticalService {
   async getStatisticOrder(
     user: UserToken,
     params?: any,
+  ): Promise<{ month: string; count: number }[]> {
+    try {
+      if (
+        user.role !== 'ADMIN' &&
+        user.role !== 'STAFF'
+      ) {
+        throw new Error(
+          'Người dùng không có quyền',
+        );
+      }
+
+      let whereClause = {}; // Define an empty where clause
+
+      // Check if the date range parameters are provided
+      if (
+        params &&
+        params.dateStart &&
+        params.dateEnd
+      ) {
+        whereClause = {
+          createdAt: {
+            gte: params.dateStart,
+            lte: params.dateEnd,
+          },
+        }; // Set the where clause to filter by date range
+      }
+
+      const orders: Order[] =
+        await this.prisma.order.findMany({
+          where: whereClause,
+          include: {
+            OrderDetail: {
+              select: {
+                dateAdd: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc', // Order by createdAt in ascending order
+          },
+        });
+
+      // Create an object to store the count of orders for each month
+      const orderCountsByMonth: {
+        [month: string]: number;
+      } = {};
+
+      // Count the number of orders for each month
+      for (const order of orders) {
+        if (order.status === 'IS_SUCCESS') {
+          const monthYear = order.createdAt
+            .toISOString()
+            .slice(0, 7); // Extracting only year and month
+          if (orderCountsByMonth[monthYear]) {
+            orderCountsByMonth[monthYear]++;
+          } else {
+            orderCountsByMonth[monthYear] = 1;
+          }
+        }
+      }
+
+      // Convert orderCountsByMonth to the desired format
+      const result = Object.entries(
+        orderCountsByMonth,
+      ).map(([month, count]) => ({
+        month,
+        count,
+      }));
+
+      console.log(result);
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error.message,
+      );
+    }
+  }
+  async getStatisticOrderSelling(
+    user: UserToken,
+    params: any,
   ): Promise<any> {
     try {
       if (
@@ -55,78 +135,23 @@ export class StatisticalService {
 
       let whereClause = {}; // Define an empty where clause
 
-      // Check if the status parameter is provided
-      if (params && params.status) {
-        whereClause = { status: params.status }; // Set the where clause to filter by status
-      }
-
-      const orders: Order[] =
-        await this.prisma.order.findMany({
-          where: whereClause, // Pass the where clause
-          include: {
-            OrderDetail: {
-              select: {
-                dateAdd: true,
-              },
-            },
-          },
-        });
-
-      // Initialize an array to hold counts for each month
-      const monthlyCounts: number[] = new Array(
-        12,
-      ).fill(0);
-
-      const monthlyCountsCancel: number[] =
-        new Array(12).fill(0);
-
-      let sum: number = 0;
-
-      // Count orders for each month
-      orders.forEach((order: any) => {
-        const month = new Date(
-          order?.createdAt,
-        ).getMonth();
-
-        if (order?.status !== 'IS_CANCELLED') {
-          sum += Number(order?.total);
-        }
-        if (order?.status === 'IS_CANCELLED') {
-          monthlyCountsCancel[month]++;
-        }
-
-        if (order?.status !== 'IS_CANCELLED') {
-          monthlyCounts[month]++;
-        }
-      });
-
-      return {
-        dataModel: monthlyCounts,
-        dataModelCancel: monthlyCountsCancel,
-        total: sum,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException(
-        error.message,
-      );
-    }
-  }
-
-  async getStatisticOrderSelling(
-    user: UserToken,
-  ): Promise<any> {
-    try {
+      // Check if the date range parameters are provided
       if (
-        user.role !== 'ADMIN' &&
-        user.role !== 'STAFF'
+        params &&
+        params.dateStart &&
+        params.dateEnd
       ) {
-        throw new Error(
-          'Người dùng không có quyền',
-        );
+        whereClause = {
+          createdAt: {
+            gte: params.dateStart,
+            lte: params.dateEnd,
+          },
+        }; // Set the where clause to filter by date range
       }
 
       const orders: Order[] =
         await this.prisma.order.findMany({
+          where: whereClause,
           include: {
             OrderDetail: {
               select: {
@@ -134,38 +159,42 @@ export class StatisticalService {
               },
             },
           },
+          orderBy: {
+            createdAt: 'asc', // Order by createdAt in ascending order
+          },
         });
 
-      // Initialize an array to hold counts for each month
-      const monthlyCounts: number[] = new Array(
-        12,
-      ).fill(0);
-
-      const monthlyCountsCancel: number[] =
-        new Array(12).fill(0);
-
-      let sum: number = 0;
-
-      // Count orders for each month
-      orders.forEach((order: any) => {
-        const month = new Date(
-          order?.createdAt,
-        ).getMonth();
-
-        if (order?.status !== 'IS_CANCELLED') {
-          sum += Number(order?.total);
+      // Create an object to store the count of orders for each month
+      const orderCountsByMonth: {
+        [month: string]: number;
+      } = {};
+      let total = 0;
+      // Count the number of orders for each month
+      for (const order of orders) {
+        if (order.status === 'IS_SUCCESS') {
+          const monthYear = order.createdAt
+            .toISOString()
+            .slice(0, 7); // Extracting only year and month
+          if (orderCountsByMonth[monthYear]) {
+            orderCountsByMonth[monthYear] +=
+              Number(order.total);
+          } else {
+            orderCountsByMonth[monthYear] =
+              Number(order.total);
+          }
+          total += Number(order.total);
         }
-        if (order?.status !== 'IS_CANCELLED') {
-          monthlyCounts[month] += Number(
-            order?.total,
-          );
-        }
-      });
+      }
 
-      return {
-        dataModel: monthlyCounts,
-        total: sum,
-      };
+      // Convert orderCountsByMonth to the desired format
+      const result = Object.entries(
+        orderCountsByMonth,
+      ).map(([month, count]) => ({
+        month,
+        count,
+      }));
+
+      return [result, total];
     } catch (error) {
       throw new InternalServerErrorException(
         error.message,
@@ -190,47 +219,53 @@ export class StatisticalService {
       let whereClause = {}; // Define an empty where clause
 
       // Check if the status parameter is provided
-      if (params && params.status) {
-        whereClause = { status: params.status }; // Set the where clause to filter by status
+      if (
+        params &&
+        params.dateStart &&
+        params.dateEnd
+      ) {
+        whereClause = {
+          createdAt: {
+            gte: params.dateStart,
+            lte: params.dateEnd,
+          },
+        }; // Set the where clause to filter by date range
       }
 
       const orders: OrderDesign[] =
         await this.prisma.orderDesign.findMany({
           where: whereClause, // Pass the where clause
+          orderBy: {
+            createdAt: 'asc', // Order by createdAt in ascending order
+          },
         });
 
-      // Initialize an array to hold counts for each month
-      const monthlyCounts: number[] = new Array(
-        12,
-      ).fill(0);
-      const monthlyCountsCancel: number[] =
-        new Array(12).fill(0);
+      const orderCountsByMonth: {
+        [month: string]: number;
+      } = {};
+      // Count the number of orders for each month
+      for (const order of orders) {
+        if (order.status === 'IS_SUCCESS') {
+          const monthYear = order.createdAt
+            .toISOString()
+            .slice(0, 7); // Extracting only year and month
+          if (orderCountsByMonth[monthYear]) {
+            orderCountsByMonth[monthYear]++;
+          } else {
+            orderCountsByMonth[monthYear] = 1;
+          }
 
-      let sum: number = 0;
-
-      // Count orders for each month
-      orders.forEach((order: any) => {
-        const month = new Date(
-          order?.createdAt,
-        ).getMonth();
-
-        if (order?.status !== 'IS_CANCELLED') {
-          sum += Number(order?.total);
         }
-        if (order?.status === 'IS_CANCELLED') {
-          monthlyCountsCancel[month]++;
-        }
+      }
+      // Convert orderCountsByMonth to the desired format
+      const result = Object.entries(
+        orderCountsByMonth,
+      ).map(([month, count]) => ({
+        month,
+        count,
+      }));
 
-        if (order?.status !== 'IS_CANCELLED') {
-          monthlyCounts[month]++;
-        }
-      });
-
-      return {
-        dataModel: monthlyCounts,
-        dataModelCancel: monthlyCountsCancel,
-        total: sum,
-      };
+      return result;
     } catch (error) {
       throw new InternalServerErrorException(
         error.message,
@@ -240,6 +275,7 @@ export class StatisticalService {
 
   async getStatisticOrderDesignSelling(
     user: UserToken,
+    params?: any,
   ): Promise<any> {
     try {
       if (
@@ -251,39 +287,59 @@ export class StatisticalService {
         );
       }
 
+      let whereClause = {}; // Define an empty where clause
+
+      // Check if the status parameter is provided
+      if (
+        params &&
+        params.dateStart &&
+        params.dateEnd
+      ) {
+        whereClause = {
+          createdAt: {
+            gte: params.dateStart,
+            lte: params.dateEnd,
+          },
+        }; // Set the where clause to filter by date range
+      }
+
       const orders: OrderDesign[] =
-        await this.prisma.orderDesign.findMany(
-          {},
-        );
+        await this.prisma.orderDesign.findMany({
+          where: whereClause, // Pass the where clause
+          orderBy: {
+            createdAt: 'asc', // Order by createdAt in ascending order
+          },
+        });
 
-      // Initialize an array to hold counts for each month
-      const monthlyCounts: number[] = new Array(
-        12,
-      ).fill(0);
-      const monthlyCountsCancel: number[] =
-        new Array(12).fill(0);
-
-      let sum: number = 0;
-
-      // Count orders for each month
-      orders.forEach((order: any) => {
-        const month = new Date(
-          order?.createdAt,
-        ).getMonth();
-
-        if (order?.status !== 'IS_CANCELLED') {
-          sum += Number(order?.total);
+      const orderCountsByMonth: {
+        [month: string]: number;
+      } = {};
+      let total = 0;
+      // Count the number of orders for each month
+      for (const order of orders) {
+        if (order.status === 'IS_SUCCESS') {
+          const monthYear = order.createdAt
+            .toISOString()
+            .slice(0, 7); // Extracting only year and month
+          if (orderCountsByMonth[monthYear]) {
+            orderCountsByMonth[monthYear] +=
+              Number(order.total);
+          } else {
+            orderCountsByMonth[monthYear] =
+              Number(order.total);
+          }
+          total += Number(order.total);
         }
-     
-        if (order?.status !== 'IS_CANCELLED') {
-          monthlyCounts[month] += Number(order?.total);
-        }
-      });
+      }
+      // Convert orderCountsByMonth to the desired format
+      const result = Object.entries(
+        orderCountsByMonth,
+      ).map(([month, count]) => ({
+        month,
+        count,
+      }));
 
-      return {
-        dataModel: monthlyCounts,
-        total: sum,
-      };
+      return [result, total];
     } catch (error) {
       throw new InternalServerErrorException(
         error.message,

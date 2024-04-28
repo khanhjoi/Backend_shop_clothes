@@ -68,9 +68,11 @@ export class StatisticalController {
   @HttpCode(HttpStatus.OK)
   getStatisticalOrderSelling(
     @GetUser() user: UserToken,
+    @Query() params: any,
   ) {
     return this.statisticalService.getStatisticOrderSelling(
       user,
+      params
     );
   }
 
@@ -96,6 +98,7 @@ export class StatisticalController {
   ) {
     return this.statisticalService.getStatisticOrderDesignSelling(
       user,
+      params
     );
   }
 }
