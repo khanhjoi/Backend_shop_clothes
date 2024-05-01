@@ -103,6 +103,7 @@ export class ProductService {
       await this.prisma.product.findUnique({
         where: {
           id: id,
+          isDelete: false
         },
         include: {
           rating: {

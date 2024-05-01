@@ -111,7 +111,6 @@ export class StatisticalService {
         count,
       }));
 
-      console.log(result);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(
@@ -254,7 +253,6 @@ export class StatisticalService {
           } else {
             orderCountsByMonth[monthYear] = 1;
           }
-
         }
       }
       // Convert orderCountsByMonth to the desired format

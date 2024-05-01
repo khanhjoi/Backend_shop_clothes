@@ -55,6 +55,9 @@ export class OrderService {
               },
             },
           },
+          orderBy: {
+            status: "asc"
+          }
         });
       if (!order)
         throw new NotFoundError(
@@ -86,6 +89,9 @@ export class OrderService {
               },
             },
           },
+          orderBy: {
+            status: "desc"
+          }
         });
       if (!order)
         throw new NotFoundError(
@@ -493,6 +499,9 @@ export class OrderService {
               },
             },
           },
+          orderBy: {
+            status: "asc"
+          }
         });
 
       if (!orders)
