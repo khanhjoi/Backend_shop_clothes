@@ -15,9 +15,8 @@ async function bootstrap() {
   // Enable CORS
   app.enableCors({
     origin: [
-      'http://localhost:5174',
-      'http://localhost:5173',
-      'http://localhost:4444',
+      'https://frontedn-shop-clothes-1wwb0z8k8-khanh-nguyens-projects-8c285c85.vercel.app/',
+      'https://frontend-ipz9t38y2-khanh-nguyens-projects-8c285c85.vercel.app',
     ],
   }),
     await app.listen(3333);
