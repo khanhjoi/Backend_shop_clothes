@@ -7,8 +7,8 @@ async function bootstrap() {
   // this set up for nest know to use class ValidationPipe
   app.enableCors({
     origin: [
-      'https://frontedn-shop-clothes-1wwb0z8k8-khanh-nguyens-projects-8c285c85.vercel.app',
-      'https://frontend-ipz9t38y2-khanh-nguyens-projects-8c285c85.vercel.app',
+      'https://frontedn-shop-clothes-l0468hik9-khanh-nguyens-projects-8c285c85.vercel.app',
+      'https://frontend-gm9cbd409-khanh-nguyens-projects-8c285c85.vercel.app',
     ],
   });
   app.useGlobalPipes(
