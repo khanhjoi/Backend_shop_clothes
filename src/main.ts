@@ -12,13 +12,14 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS
-  app.enableCors({
-    origin: [
-      'https://frontedn-shop-clothes-1wwb0z8k8-khanh-nguyens-projects-8c285c85.vercel.app/',
-      'https://frontend-ipz9t38y2-khanh-nguyens-projects-8c285c85.vercel.app',
-    ],
-  }),
-    await app.listen(3333);
+  // CORS is disabled
+  // app.enableCors({
+  //   origin: [
+  //     'https://frontedn-shop-clothes-1wwb0z8k8-khanh-nguyens-projects-8c285c85.vercel.app/',
+  //     'https://frontend-ipz9t38y2-khanh-nguyens-projects-8c285c85.vercel.app',
+  //   ],
+  // });
+
+  await app.listen(3333);
 }
 bootstrap();
